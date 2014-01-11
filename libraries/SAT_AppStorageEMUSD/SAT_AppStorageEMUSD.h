@@ -60,7 +60,7 @@ public:
 
     void init(  boolean debug, 		// is the class printing verbose lines on Serial
   		int csPin, 		// pin of the chip select on your arduino config (uno ethernet = 4)
-    		boolean erasefile, 	// true = erase the file to restart capture, false = append data
+    		boolean append, 	// false = erase the file to restart capture, true = append data
     		char * filename);	// name of the file, (if NULL, default "datalog.bin")
 
     /*

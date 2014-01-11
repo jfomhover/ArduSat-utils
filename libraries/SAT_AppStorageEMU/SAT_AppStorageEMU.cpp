@@ -2,7 +2,7 @@
     File :         SAT_AppStorageEMU.cpp
     Author(s) :    + Jean-Francois Omhover (@jfomhover)
                    + NanoSatisfi Inc.
-    Last Changed : Aug. 8th 2013
+    Last Changed : Jan. 11, 2014
     Description :  emulator class adapted from the SAT_AppStorage class made by NanoSatisfi for ArduSat
                    outputs the values to Serial instead of communicating them via I2C
                    
@@ -51,10 +51,14 @@ const prog_uchar string_10[] PROGMEM = " len=";
 #define PGM_STRING_LEN			string_10
 const prog_uchar string_11[] PROGMEM = " type=";
 #define PGM_STRING_TYPE			string_11
-const prog_uchar string_12[] PROGMEM = " type=";
+const prog_uchar string_12[] PROGMEM = " totalsent=";
 #define PGM_STRING_TOTALLEN		string_12
 const prog_uchar string_13[] PROGMEM = "Error opening ";
 #define PGM_STRING_ERROROPENING	string_13
+const prog_uchar string_14[] PROGMEM = "*** sending chars : ";
+#define PGM_STRING_SENDINGCHARS	string_14
+const prog_uchar string_15[] PROGMEM = "*** sending bytes : ";
+#define PGM_STRING_SENDINGBYTES	string_15
 
 
 void ASEMU_printPROGMEMString(const prog_uchar *str) {
@@ -69,15 +73,13 @@ void ASEMU_printPROGMEMString(const prog_uchar *str) {
  ******************************************************************************/
 SAT_AppStorageEMU::SAT_AppStorageEMU()
 {
-  nodeAddress_  = EEPROM.read(0x00);
-  debugMode_ = false;
-  dataCount_ = 0;
+	nodeAddress_  = EEPROM.read(0x00);
+	debugMode_ = false;
+	dataCount_ = 0;
 }
 
 void SAT_AppStorageEMU::init(boolean debug) {
 	debugMode_ = debug;
-//	if (debugMode_)
-//		  Serial.begin(bauds);
 }
 
 /******************************************************************************
@@ -91,79 +93,97 @@ void SAT_AppStorageEMU::init(boolean debug) {
 */
 void SAT_AppStorageEMU::send(char data[])
 {
-  unsigned int dataLen  = (unsigned)strlen(data);
-  unsigned int messages = dataLen / NODE_COMM_MAX_BUFFER_SIZE;
+	unsigned int dataLen  = (unsigned)strlen(data);
+	unsigned int messages = dataLen / NODE_COMM_MAX_BUFFER_SIZE;
 
-  for(unsigned int i = 0; i < messages; i++)
-  {
-    unsigned int start_offset   = i * NODE_COMM_MAX_BUFFER_SIZE;
-    copyAndSend((byte*) data, start_offset, NODE_COMM_MAX_BUFFER_SIZE);
-  }
-  // process remainder or if data was less then NODE_COMM_MAX_BUFFER_SIZE;
-  uint8_t remainderLen = dataLen % NODE_COMM_MAX_BUFFER_SIZE;
-  uint8_t finalOffset  = (dataLen > NODE_COMM_MAX_BUFFER_SIZE) ?
-    (messages * NODE_COMM_MAX_BUFFER_SIZE) : 0;
-  copyAndSend((byte*) data, finalOffset, remainderLen);
+	if(debugMode_) {
+		ASEMU_printPROGMEMString(PGM_STRING_SENDINGCHARS);
+	}
+	Serial.println(data);
+
+	for(unsigned int i = 0; i < messages; i++)
+	{
+		unsigned int start_offset   = i * NODE_COMM_MAX_BUFFER_SIZE;
+		copyAndSend((byte*) data, start_offset, NODE_COMM_MAX_BUFFER_SIZE);
+	}
+
+	// process remainder or if data was less then NODE_COMM_MAX_BUFFER_SIZE;
+	uint8_t remainderLen = dataLen % NODE_COMM_MAX_BUFFER_SIZE;
+	uint8_t finalOffset  = (dataLen > NODE_COMM_MAX_BUFFER_SIZE) ?
+		(messages * NODE_COMM_MAX_BUFFER_SIZE) : 0;
+
+	copyAndSend((byte*) data, finalOffset, remainderLen);
 }
 
 void SAT_AppStorageEMU::send(byte *data ,unsigned int offset, unsigned int length)
 {
-  unsigned int dataLen  = (unsigned)(length-offset);
-  unsigned int messages = dataLen / NODE_COMM_MAX_BUFFER_SIZE;
+	unsigned int dataLen  = (unsigned)(length-offset);
+	unsigned int messages = dataLen / NODE_COMM_MAX_BUFFER_SIZE;
 
-  for(unsigned int i = 0; i < messages; i++)
-  {
-    unsigned int start_offset   = i * NODE_COMM_MAX_BUFFER_SIZE;
-    copyAndSend((byte*) data, offset+start_offset, NODE_COMM_MAX_BUFFER_SIZE);
-  }
-  // process remainder or if data was less then NODE_COMM_MAX_BUFFER_SIZE;
-  uint8_t remainderLen = dataLen % NODE_COMM_MAX_BUFFER_SIZE;
-  uint8_t finalOffset  = (dataLen > NODE_COMM_MAX_BUFFER_SIZE) ?
-    (messages * NODE_COMM_MAX_BUFFER_SIZE) : 0;
-  copyAndSend((byte*) data, offset+finalOffset, remainderLen);
+	if(debugMode_) {
+		ASEMU_printPROGMEMString(PGM_STRING_SENDINGCHARS);
+	}
+
+	ASEMU_printPROGMEMString(PGM_STRING_SENDINGBYTES);
+	for (int i=offset; i<length; i++) {
+		if (data[i]<0x10) {Serial.print('0');}
+		Serial.print(data[i],HEX);
+		Serial.print(' ');
+	}
+	Serial.print('\n');
+
+	for(unsigned int i = 0; i < messages; i++)
+	{
+		unsigned int start_offset   = i * NODE_COMM_MAX_BUFFER_SIZE;
+		copyAndSend((byte*) data, offset+start_offset, NODE_COMM_MAX_BUFFER_SIZE);
+	}
+	// process remainder or if data was less then NODE_COMM_MAX_BUFFER_SIZE;
+
+	uint8_t remainderLen = dataLen % NODE_COMM_MAX_BUFFER_SIZE;
+	uint8_t finalOffset  = (dataLen > NODE_COMM_MAX_BUFFER_SIZE) ?
+		(messages * NODE_COMM_MAX_BUFFER_SIZE) : 0;
+
+	copyAndSend((byte*) data, offset+finalOffset, remainderLen);
 }
 
-void SAT_AppStorageEMU::copyAndSend(
-  byte data[], unsigned int offset, unsigned int length)
+void SAT_AppStorageEMU::copyAndSend(byte data[], unsigned int offset, unsigned int length)
 {
-  nanosat_message_t msg;
-  msg.node_addr = nodeAddress_;
-  msg.prefix    = NODE_COMM_MESSAGE_PREFIX;
-  msg.len       = length;
-  msg.type      = APPEND;
-  memcpy(msg.buf, (uint8_t*)&(data[offset]), length * sizeof(char));
-  // commLayer_.sendMessage(msg);
-  dataCount_+=msg.len;
+	nanosat_message_t msg;
+	msg.node_addr = nodeAddress_;
+	msg.prefix    = NODE_COMM_MESSAGE_PREFIX;
+	msg.len       = length;
+	msg.type      = APPEND;
+	memcpy(msg.buf, (uint8_t*)&(data[offset]), length * sizeof(char));
+	// commLayer_.sendMessage(msg);
+	dataCount_+=msg.len;
 
-  if (dataCount_ > 10240) {
-	  if (debugMode_)
-		ASEMU_printPROGMEMString(PGM_STRING_ENDOFEXP);
-//    Serial.print("*** END OF EXPERIMENT BY REACHING 10KB");
-    while(1);
-  }
+	if (dataCount_ > 10240) {
+		if (debugMode_)
+			ASEMU_printPROGMEMString(PGM_STRING_ENDOFEXP);
+		while(1);
+	}
 
-  if (debugMode_) {
+	if (debugMode_) {
 		ASEMU_printPROGMEMString(PGM_STRING_COPYANDSEND);
-//    Serial.print("*** SAT_AppStorageEMUSD::copyAndSend() : ");
-		ASEMU_printPROGMEMString(PGM_STRING_MS);
-//    Serial.print(" ms=");
-    Serial.print(millis());
-	ASEMU_printPROGMEMString(PGM_STRING_NODEADDR);
-//    Serial.print(" node_addr=");
-    Serial.print(msg.node_addr,HEX);
-	ASEMU_printPROGMEMString(PGM_STRING_PREFIX);
-//   Serial.print(" prefix=");
-    Serial.print(msg.prefix,HEX);
-	ASEMU_printPROGMEMString(PGM_STRING_LEN);
-//  Serial.print(" len=");
-    Serial.print(msg.len);
-	ASEMU_printPROGMEMString(PGM_STRING_TYPE);
-//    Serial.print(" type=");
-    Serial.print(msg.type,HEX);
-	ASEMU_printPROGMEMString(PGM_STRING_TOTALLEN);
-//    Serial.print(" totalLen=");
-    Serial.println(dataCount_);
-  }
 
-  delay(100);
+		ASEMU_printPROGMEMString(PGM_STRING_MS);
+		Serial.print(millis());
+
+		ASEMU_printPROGMEMString(PGM_STRING_NODEADDR);
+		Serial.print(msg.node_addr,HEX);
+
+		ASEMU_printPROGMEMString(PGM_STRING_PREFIX);
+		Serial.print(msg.prefix,HEX);
+
+		ASEMU_printPROGMEMString(PGM_STRING_LEN);
+		Serial.print(msg.len);
+
+		ASEMU_printPROGMEMString(PGM_STRING_TYPE);
+		Serial.print(msg.type,HEX);
+
+		ASEMU_printPROGMEMString(PGM_STRING_TOTALLEN);
+		Serial.println(dataCount_);
+	}
+
+	delay(100);
 }
