@@ -18,7 +18,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <SD.h>
 #include <SAT_DataLib.h>
 
 byte buffer[PACKET_SIZE_MAX];    // allocate some space for the builder to work

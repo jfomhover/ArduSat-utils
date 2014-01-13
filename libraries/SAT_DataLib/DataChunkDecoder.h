@@ -22,29 +22,32 @@
 #define _DATACHUNKDECODER_H_
 
 #include <Arduino.h>
-#include <SD.h>
 
 #define PACKET_SIZE_CHUNKHEADER  3
 
 
 class DataChunkDecoder {
+  struct packet_chunk_header * header;
+  uint16_t currentDatatypes;
   public:
+    void init();
     int getChunkLength(byte * buffer);
     boolean parseChunk(byte * buffer);
-    boolean parseFile(File &dataFile, byte * buffer, int bufferlen);
+    boolean parseFile(Stream &dataFile, byte * buffer, int bufferlen);
+    virtual void onDataChange(uint16_t newtypes);
     virtual void onDatatype(uint16_t type, byte * ptr);  // what we should do when a datatype is detected    
-    virtual void onMS(unsigned long int ms) {};
-    virtual void onLUM1(uint16_t lum, uint16_t ir) {};
-    virtual void onLUM2(uint16_t lum, uint16_t ir) {};
-    virtual void onMAG(int16_t x, int16_t y, int16_t z) {};
-    virtual void onTMP1(int16_t tmp) {};
-    virtual void onTMP2(int16_t tmp) {};
-    virtual void onTMP3(int16_t tmp) {};
-    virtual void onTMP4(int16_t tmp) {};
-    virtual void onINFRATHERM(int16_t infrat) {};
-    virtual void onACCEL(int16_t x, int16_t y, int16_t z) {};
-    virtual void onGYRO(int16_t x, int16_t y, int16_t z) {};
-    virtual void onUnknown(uint16_t type, byte * ptr) {};
+    virtual void onMS(unsigned long int ms) { Serial.print(ms); Serial.print(';'); };
+    virtual void onLUM1(uint16_t lum, uint16_t ir) { Serial.print(lum); Serial.print(';'); Serial.print(ir); Serial.print(';'); };
+    virtual void onLUM2(uint16_t lum, uint16_t ir) { Serial.print(lum); Serial.print(';'); Serial.print(ir); Serial.print(';'); };
+    virtual void onMAG(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(';'); Serial.print(y); Serial.print(';'); Serial.print(z); Serial.print(';'); };
+    virtual void onTMP1(int16_t tmp) { Serial.print(tmp); Serial.print(';'); };
+    virtual void onTMP2(int16_t tmp) { Serial.print(tmp); Serial.print(';'); };
+    virtual void onTMP3(int16_t tmp) { Serial.print(tmp); Serial.print(';'); };
+    virtual void onTMP4(int16_t tmp) { Serial.print(tmp); Serial.print(';'); };
+    virtual void onINFRATHERM(int16_t infrat) { Serial.print(infrat); Serial.print(';'); };
+    virtual void onACCEL(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(';'); Serial.print(y); Serial.print(';'); Serial.print(z); Serial.print(';'); };
+    virtual void onGYRO(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(';'); Serial.print(y); Serial.print(';'); Serial.print(z); Serial.print(';'); };
+    virtual void onUnknown(uint16_t type, byte * ptr) { Serial.print("unknown"); Serial.print(';'); };
 };
 
 #endif /* _DATACHUNKDECODER_H_ */
