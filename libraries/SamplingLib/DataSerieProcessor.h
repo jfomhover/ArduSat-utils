@@ -98,10 +98,7 @@ template <typename T, typename U> class DataSerieProcessor : public DataSerieMap
         return(0.0);
       float t_ret = 0;
       for (int i=(rankA+1); i<rankB; i++) {
-//        float t_localErr = this->computeErrorByLinearApproxAtIndex(rankA, rankB, i);
-        float lambda = ((float)(i - rankA))/((float)(rankB - rankA));
-        float t_approxval = (1-lambda)*(this->getValueAtIndex(rankA))+(lambda)*(this->getValueAtIndex(rankB));
-        float t_localErr = abs(this->getValueAtIndex(i) - t_approxval);
+        float t_localErr = this->computeErrorByLinearApproxAtIndex(rankA, rankB, i);
 //        Serial.println(t_localErr);
         if (t_localErr > t_ret)
           t_ret = t_localErr;
@@ -110,7 +107,8 @@ template <typename T, typename U> class DataSerieProcessor : public DataSerieMap
     };
     
     float computeErrorByLinearApproxAtIndex(int rankA, int rankB, int rankI) {
-      float lambda = ((float)(rankI - rankA))/((float)(rankB - rankA));
+//      float lambda = ((float)(rankI - rankA))/((float)(rankB - rankA));
+      float lambda = ((float)(this->getKeyAtIndex(rankI) - this->getKeyAtIndex(rankA)))/((float)(this->getKeyAtIndex(rankB) - this->getKeyAtIndex(rankA)));
       float t_approxval = (1-lambda)*(this->getValueAtIndex(rankA))+(lambda)*(this->getValueAtIndex(rankB));
       float t_localErr = abs(this->getValueAtIndex(rankI) - t_approxval);
       return(t_localErr);
