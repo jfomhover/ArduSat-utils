@@ -1,29 +1,32 @@
 /*
-    Author :       Jean-Francois Omhover (jf.omhover@gmail.com, twitter:@jfomhover)
-    URL :          https://github.com/jfomhover/ArduSat-utils
-    
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+********************************************************************
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+Copyright 2014, Jean-François Omhover (jf.omhover@gmail.com, twitter @jfomhover)
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+********************************************************************
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+********************************************************************
+
+    Description :  Interface class for the serie to be handled by SamplingMethod
+                   without knowledge of the inner types of the data seri
+    Last Changed : Jan. 27, 2014
+
+********************************************************************
 */
 
 #ifndef _DATASERIEPROCESSOR_H_
 #define _DATASERIEPROCESSOR_H_
 
-/*
-    Description :  Interface class for the serie to be handled by SamplingMethod
-                   without knowledge of the inner types of the data seri
-    Last Changed : Jan. 17, 2014
-*/
 
 #include "DataSerieMap.h"
 
@@ -33,8 +36,9 @@ class DataSerieProcessorInterface {
     virtual int getLength() { return(0); };                                              // returns the length of the data serie
     virtual float variance1(int rankA, int rankB) { return(0.0); };                      // returns the variance of a segment
     virtual float globalVariance() { return(variance1(0,getLength())); };                // returns the variance of the whole serie
-    virtual float computeMaxErrorByLinearApprox(int rankA, int rankB) { return(0.0); };  // returns the maximum difference between a linear approximation and the data sample
+    virtual float computeMaxErrorByLinearApprox(int rankA, int rankB, int * rankMax = NULL) { return(0.0); };  // returns the maximum difference between a linear approximation and the data sample
                                                                                          // (rankA and rankB being the extrema of the segments)
+                                                                                         // puts the rank of the maximum error at rankMax
     virtual float computeSumErrorByLinearApprox(int rankA, int rankB) { return(0.0); };  // returns the sum of the abs difference between a linear approximation and the data sample
     virtual float computeErrorByLinearApproxAtIndex(int rankA, int rankB, int rankI) { return(0.0); };  // returns the abs difference between the value at rankI and it's linear approx between rankA-rankB
     virtual void reduce(MaskHandler mask) {};                                            // reduce the data serie using the mask (keep only the points that are up in the mask)
@@ -85,13 +89,8 @@ template <typename T, typename U> class DataSerieProcessor : public DataSerieMap
       }
       return(t_ret);
     };
-    
+/*    
     float computeMaxErrorByLinearApprox(int rankA, int rankB) {
-/*      Serial.print("DataSerieProcessor("); 
-      Serial.print(rankA);
-      Serial.print(',');
-      Serial.print(rankB);
-      Serial.println(')'); */
       if (rankA == rankB)
         return(0.0);
       if (rankA == (rankB-1))
@@ -103,6 +102,34 @@ template <typename T, typename U> class DataSerieProcessor : public DataSerieMap
         if (t_localErr > t_ret)
           t_ret = t_localErr;
       }
+      return(t_ret);
+    };
+*/
+    float computeMaxErrorByLinearApprox(int rankA, int rankB, int * rankMax = NULL) {
+/*      Serial.print("DataSerieProcessor("); 
+      Serial.print(rankA);
+      Serial.print(',');
+      Serial.print(rankB);
+      Serial.println(')'); */
+      if (rankA == rankB)
+        return(0.0);
+      if (rankA == (rankB-1))
+        return(0.0);
+      float t_ret = 0;
+      float t_localErrMax = 0;
+      int t_localErrMaxRank = (rankB+rankA)/2;
+      for (int i=(rankA+1); i<rankB; i++) {
+        float t_localErr = this->computeErrorByLinearApproxAtIndex(rankA, rankB, i);
+        if (t_localErr > t_localErrMax) {
+          t_localErrMax = t_localErr;
+          t_localErrMaxRank = i;
+        }
+//        Serial.println(t_localErr);
+        if (t_localErr > t_ret)
+          t_ret = t_localErr;
+      }
+      if (rankMax != NULL)
+        *rankMax = t_localErrMaxRank;
       return(t_ret);
     };
     

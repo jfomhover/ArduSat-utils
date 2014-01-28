@@ -183,16 +183,15 @@ void SAT_AppStorageEMUSD::send(byte *data, unsigned int offset, unsigned int len
 	unsigned int messages = dataLen / NODE_COMM_MAX_BUFFER_SIZE;
 
 	if(debugMode_) {
-		ASEMUSD_printPROGMEMString(PGM_STRING_SENDINGCHARS);
+		ASEMUSD_printPROGMEMString(PGM_STRING_SENDINGBYTES);
+		for (int i=offset; i<length; i++) {
+			if (data[i]<0x10) {Serial.print('0');}
+			Serial.print(data[i],HEX);
+			Serial.print(' ');
+		}
+		Serial.print('\n');
 	}
 
-	ASEMUSD_printPROGMEMString(PGM_STRING_SENDINGBYTES);
-	for (int i=offset; i<length; i++) {
-		if (data[i]<0x10) {Serial.print('0');}
-		Serial.print(data[i],HEX);
-		Serial.print(' ');
-	}
-	Serial.print('\n');
 
 	if (SDavailable_) {
 		if(debugMode_) ASEMUSD_printPROGMEMString(PGM_STRING_SDWRITING);

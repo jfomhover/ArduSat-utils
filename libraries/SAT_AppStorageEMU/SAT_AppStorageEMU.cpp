@@ -39,7 +39,7 @@
 // *** RAM OPTIMIZATION FOR DEBUG (too much strings in this class)
 const prog_uchar string_5[] PROGMEM = "*** END OF EXPERIMENT BY REACHING 10KB";
 #define PGM_STRING_ENDOFEXP		string_5
-const prog_uchar string_6[] PROGMEM = "*** SAT_AppStorageEMUSD::copyAndSend() : ";
+const prog_uchar string_6[] PROGMEM = "*** SAT_AppStorageEMU::copyAndSend() : ";
 #define PGM_STRING_COPYANDSEND	string_6
 const prog_uchar string_7[] PROGMEM = " ms=";
 #define PGM_STRING_MS			string_7
@@ -121,16 +121,15 @@ void SAT_AppStorageEMU::send(byte *data ,unsigned int offset, unsigned int lengt
 	unsigned int messages = dataLen / NODE_COMM_MAX_BUFFER_SIZE;
 
 	if(debugMode_) {
-		ASEMU_printPROGMEMString(PGM_STRING_SENDINGCHARS);
+		ASEMU_printPROGMEMString(PGM_STRING_SENDINGBYTES);
+		for (int i=offset; i<length; i++) {
+			if (data[i]<0x10) {Serial.print('0');}
+			Serial.print(data[i],HEX);
+			Serial.print(' ');
+		}
+		Serial.print('\n');
 	}
 
-	ASEMU_printPROGMEMString(PGM_STRING_SENDINGBYTES);
-	for (int i=offset; i<length; i++) {
-		if (data[i]<0x10) {Serial.print('0');}
-		Serial.print(data[i],HEX);
-		Serial.print(' ');
-	}
-	Serial.print('\n');
 
 	for(unsigned int i = 0; i < messages; i++)
 	{

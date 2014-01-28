@@ -1,30 +1,32 @@
 /*
-    Author :       Jean-Francois Omhover (jf.omhover@gmail.com, twitter:@jfomhover)
-    URL :          https://github.com/jfomhover/ArduSat-utils
-    
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+********************************************************************
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+Copyright 2014, Jean-François Omhover (jf.omhover@gmail.com, twitter @jfomhover)
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+********************************************************************
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+********************************************************************
+
+Description :  virtual class for operating a sampling method
+this class is basically useless in itself, and should be implemented by another
+
+Last Changed : Jan. 17, 2014
+
+********************************************************************
 */
 
 #ifndef _SAMPLINGMETHOD_H_
 #define _SAMPLINGMETHOD_H_
-
-/*
-    Description :  virtual class for operating a sampling method
-                   this class is basically useless in itself, and should be implemented by another
-    Last Changed : Jan. 17, 2014
-*/
-
 
 #include "MaskHandler.h"
 #include "DataSerieProcessor.h"

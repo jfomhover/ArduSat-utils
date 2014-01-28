@@ -1,53 +1,63 @@
 /*
-    Author :       Jean-Francois Omhover (@jfomhover)
-    Last Changed : Jan. 12, 2013
-    Description :  library for handling, formatting and decoding data from the ArduSat sensors.
-                   it has been thought as a utility for sending packets through the SAT_AppStorage library
+********************************************************************
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Copyright 2014, Jean-François Omhover (jf.omhover@gmail.com, twitter @jfomhover)
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+********************************************************************
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+********************************************************************
+
+Description :  library for handling, formatting and decoding data from the ArduSat sensors.
+it has been thought as a utility for sending packets through the SAT_AppStorage library
+
+********************************************************************
 */
 
 #ifndef _DATACHUNKDECODER_H_
 #define _DATACHUNKDECODER_H_
 
 #include <Arduino.h>
-
+#include "datalib_datatypes.h"
+#include "datalib_userdefined.h"
 #define PACKET_SIZE_CHUNKHEADER  3
-
+#define PACKET_DECODER_SEPARATIONDEFAULT	';'
 
 class DataChunkDecoder {
   struct packet_chunk_header * header;
   uint16_t currentDatatypes;
+  char _separation;
   public:
+    DataChunkDecoder();
     void init();
+    void setSeparation(char c);
     int getChunkLength(byte * buffer);
     boolean parseChunk(byte * buffer);
     boolean parseFile(Stream &dataFile, byte * buffer, int bufferlen);
     virtual void onDataChange(uint16_t newtypes);
     virtual void onDatatype(uint16_t type, byte * ptr);  // what we should do when a datatype is detected    
-    virtual void onMS(unsigned long int ms) { Serial.print(ms); Serial.print(';'); };
-    virtual void onLUM1(uint16_t lum, uint16_t ir) { Serial.print(lum); Serial.print(';'); Serial.print(ir); Serial.print(';'); };
-    virtual void onLUM2(uint16_t lum, uint16_t ir) { Serial.print(lum); Serial.print(';'); Serial.print(ir); Serial.print(';'); };
-    virtual void onMAG(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(';'); Serial.print(y); Serial.print(';'); Serial.print(z); Serial.print(';'); };
-    virtual void onTMP1(int16_t tmp) { Serial.print(tmp); Serial.print(';'); };
-    virtual void onTMP2(int16_t tmp) { Serial.print(tmp); Serial.print(';'); };
-    virtual void onTMP3(int16_t tmp) { Serial.print(tmp); Serial.print(';'); };
-    virtual void onTMP4(int16_t tmp) { Serial.print(tmp); Serial.print(';'); };
-    virtual void onINFRATHERM(int16_t infrat) { Serial.print(infrat); Serial.print(';'); };
-    virtual void onACCEL(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(';'); Serial.print(y); Serial.print(';'); Serial.print(z); Serial.print(';'); };
-    virtual void onGYRO(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(';'); Serial.print(y); Serial.print(';'); Serial.print(z); Serial.print(';'); };
-    virtual void onUnknown(uint16_t type, byte * ptr) { Serial.print("unknown"); Serial.print(';'); };
+    virtual void onMS(unsigned long int ms);
+    virtual void onLUM1(uint16_t lum, uint16_t ir);
+    virtual void onLUM2(uint16_t lum, uint16_t ir);
+    virtual void onMAG(int16_t x, int16_t y, int16_t z);
+    virtual void onTMP1(int16_t tmp);
+    virtual void onTMP2(int16_t tmp);
+    virtual void onTMP3(int16_t tmp);
+    virtual void onTMP4(int16_t tmp);
+    virtual void onINFRATHERM(int16_t infrat);
+    virtual void onACCEL(int16_t x, int16_t y, int16_t z);
+    virtual void onGYRO(int16_t x, int16_t y, int16_t z);
+    virtual void onUserDefined(byte userblock[5]);
+    virtual void onUnknown(uint16_t type, byte * ptr);
 };
 
 #endif /* _DATACHUNKDECODER_H_ */
