@@ -250,13 +250,21 @@ int DataDecoder::onUserDefined(byte userblock[]) {
     	}
     	t_len = 5;
     	break;
-	case DATATYPE_USERDEFINED_LONGINT:
-		Serial.print(*(long int *)(userblock+1));
-		t_len = 1 + sizeof(long int);
+	case DATATYPE_USERDEFINED_UINT4:
+		Serial.print(*(uint32_t *)(userblock+1));
+		t_len = 1 + sizeof(uint32_t);
 		break;
-	case DATATYPE_USERDEFINED_INTEGER:
-		Serial.print(*(int *)(userblock+1));
-		t_len = 1 + sizeof(int);
+	case DATATYPE_USERDEFINED_UINT2:
+		Serial.print(*(uint16_t *)(userblock+1));
+		t_len = 1 + sizeof(uint16_t);
+		break;
+	case DATATYPE_USERDEFINED_INT4:
+		Serial.print(*(int32_t *)(userblock+1));
+		t_len = 1 + sizeof(int32_t);
+		break;
+	case DATATYPE_USERDEFINED_INT2:
+		Serial.print(*(int16_t *)(userblock+1));
+		t_len = 1 + sizeof(int16_t);
 		break;
 	case DATATYPE_USERDEFINED_FLOAT:
 		Serial.print(*(float *)(userblock+1));

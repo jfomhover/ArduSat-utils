@@ -32,7 +32,7 @@ see library at https://github.com/jfomhover/ArduSat-utils/tree/master/libraries/
 // NOTE : configuration of SD card / file
 #define CS_PIN      4    // 4 for Arduino Ethernet
 
-byte buffer[50];   // buffer for parsing the file (maximum size of chunks)
+byte buffer[128];   // buffer for parsing the file (maximum size of chunks)
 
 // use the syntax beloc to declare the datatypes you'll need
 DataDecoder decoder;
@@ -77,7 +77,7 @@ void loop() {
   // if the file is available, write to it:
   if (dataFile) {
     decoder.setSeparation('\t');
-    decoder.parseFile(dataFile, buffer, 50);
+    decoder.parseFile(dataFile, buffer, 128);
     dataFile.close();
   }
   // if the file isn't open, pop up an error:
