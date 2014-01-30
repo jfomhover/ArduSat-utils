@@ -27,10 +27,11 @@ here we use a prior packet to decode it using the decoding scheme
 #include <SAT_DataLib.h>
 
 const int chipSelect = 4;
+char filename[] = "udpacket.bin";
 byte buffer[40];
 
 // use the syntax beloc to declare the datatypes you'll need
-DataChunkDecoder decoder;
+DataDecoder decoder;
 
 
 // just a function for demonstrating the functions
@@ -63,7 +64,7 @@ void setup() {
 
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
-  File dataFile = SD.open("datachk.bin");
+  File dataFile = SD.open(filename);
 
   // if the file is available, write to it:
   if (dataFile) {

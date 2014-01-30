@@ -37,7 +37,7 @@ byte message1[11] = { 0x23, 0x31, 0x00, 0xAD, 0x62, 0x03, 0x00, 0x19, 0x00, 0x40
 
 
 // use the syntax beloc to declare the datatypes you'll need
-DataChunkDecoder decoder;
+DataDecoder decoder;
 
 
 // just a function for demonstrating the functions

@@ -28,6 +28,7 @@ it has been thought as a utility for sending packets through the SAT_AppStorage 
 
 #define PACKET_HEADER_CHUNK  '#'
 #define PACKET_HEADER_SERIE  '!'
+#define PACKET_HEADER_USERPACKET	'U'
 
 #define PACKET_SIZE_CHUNKHEADER     3
 #define PACKET_SIZE_CHUNKBODYMAX    37
@@ -52,6 +53,6 @@ it has been thought as a utility for sending packets through the SAT_AppStorage 
 
 #include "datalib_syntax.h"
 #include "DataChunkBuilder.h"
-#include "DataChunkDecoder.h"
+#include "DataDecoder.h"
 
 #endif /* _SAT_DATALIB_H_ */

@@ -24,7 +24,7 @@ it has been thought as a utility for sending packets through the SAT_AppStorage 
 */
 
 #include <Arduino.h>
-#include "DataChunkDecoder.h"
+#include "DataDecoder.h"
 #include "datalib_syntax.h"
 #include "SAT_DataLib.h"
 
@@ -48,26 +48,26 @@ const char * datatype_names[] = {
   "CRC16"
 };
 
-DataChunkDecoder::DataChunkDecoder() {
+DataDecoder::DataDecoder() {
 	this->init();
 };
 
-void DataChunkDecoder::init() {
+void DataDecoder::init() {
   header = NULL;
   currentDatatypes = 0;
   _separation = PACKET_DECODER_SEPARATIONDEFAULT;
 };
 
-void DataChunkDecoder::setSeparation(char c) {
+void DataDecoder::setSeparation(char c) {
 	_separation = c;
 };
 
-int DataChunkDecoder::getChunkLength(byte * buffer) {
+int DataDecoder::getChunkLength(byte * buffer) {
       struct packet_chunk_header * t_ptr = (struct packet_chunk_header *)buffer;
       return(computeChunkSize(t_ptr->datatypes));
 };
 
-boolean DataChunkDecoder::parseChunk(byte * buffer) {
+boolean DataDecoder::parseChunk(byte * buffer) {
         header = (struct packet_chunk_header *)buffer;
         
       if (header->datatypes != currentDatatypes) {
@@ -86,7 +86,16 @@ boolean DataChunkDecoder::parseChunk(byte * buffer) {
 	Serial.print('\n');
 };
 
-boolean DataChunkDecoder::parseFile(Stream &dataFile, byte * buffer, int bufferlen) {
+boolean DataDecoder::parseUserPacket(byte * buffer) {
+	int packetLen = buffer[1];
+	int index = 2;
+	while (index < packetLen) {
+		index += onUserDefined(buffer+index);
+	};
+	Serial.print('\n');
+};
+
+boolean DataDecoder::parseFile(Stream &dataFile, byte * buffer, int bufferlen) {
   header = (struct packet_chunk_header *)buffer;
 
   currentDatatypes=0;
@@ -109,6 +118,17 @@ boolean DataChunkDecoder::parseFile(Stream &dataFile, byte * buffer, int bufferl
         }
         
       parseChunk(buffer);
+    } else if (buffer[0] == PACKET_HEADER_USERPACKET){
+        buffer[1] = dataFile.read();
+    	int expectedLen = buffer[1];
+        for (int i=2; i<expectedLen; i++)
+          if (dataFile.available())
+            buffer[i] = dataFile.read();
+          else {
+            Serial.println("!!! NOT ENOUGH DATA");
+            return(false);
+          }
+        parseUserPacket(buffer);
     } else {
       Serial.println("!!! HEADER MISMATCH");
       continue;
@@ -117,7 +137,7 @@ boolean DataChunkDecoder::parseFile(Stream &dataFile, byte * buffer, int bufferl
   return(true);
 };
 
-void DataChunkDecoder::onDataChange(uint16_t newtype) {
+void DataDecoder::onDataChange(uint16_t newtype) {
 	// prints out headers
 	for (int i=0; i<DATATYPE_KNOWNCOUNT; i++) {
 		if (newtype & alldatatypes[i]) {
@@ -138,7 +158,7 @@ void DataChunkDecoder::onDataChange(uint16_t newtype) {
 	Serial.print('\n');
 };
 
-void DataChunkDecoder::onDatatype(uint16_t type, byte * ptr) {
+void DataDecoder::onDatatype(uint16_t type, byte * ptr) {
   switch(type) {
     case DATATYPE_MS: {
       onMS(*((unsigned long int *)ptr));
@@ -205,37 +225,42 @@ void DataChunkDecoder::onDatatype(uint16_t type, byte * ptr) {
 };
 
 /* The serie of the output easy */
-void DataChunkDecoder::onMS(unsigned long int ms) { Serial.print(ms); Serial.print(_separation); };
-void DataChunkDecoder::onLUM1(uint16_t lum, uint16_t ir) { Serial.print(lum); Serial.print(_separation); Serial.print(ir); Serial.print(_separation); };
-void DataChunkDecoder::onLUM2(uint16_t lum, uint16_t ir) { Serial.print(lum); Serial.print(_separation); Serial.print(ir); Serial.print(_separation); };
-void DataChunkDecoder::onMAG(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(_separation); Serial.print(y); Serial.print(_separation); Serial.print(z); Serial.print(_separation); };
-void DataChunkDecoder::onTMP1(int16_t tmp) { Serial.print(tmp); Serial.print(_separation); };
-void DataChunkDecoder::onTMP2(int16_t tmp) { Serial.print(tmp); Serial.print(_separation); };
-void DataChunkDecoder::onTMP3(int16_t tmp) { Serial.print(tmp); Serial.print(_separation); };
-void DataChunkDecoder::onTMP4(int16_t tmp) { Serial.print(tmp); Serial.print(_separation); };
-void DataChunkDecoder::onINFRATHERM(int16_t infrat) { Serial.print(infrat); Serial.print(_separation); };
-void DataChunkDecoder::onACCEL(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(_separation); Serial.print(y); Serial.print(_separation); Serial.print(z); Serial.print(_separation); };
-void DataChunkDecoder::onGYRO(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(_separation); Serial.print(y); Serial.print(_separation); Serial.print(z); Serial.print(_separation); };
-void DataChunkDecoder::onUnknown(uint16_t type, byte * ptr) { Serial.print("unknown"); Serial.print(_separation); };
+void DataDecoder::onMS(unsigned long int ms) { Serial.print(ms); Serial.print(_separation); };
+void DataDecoder::onLUM1(uint16_t lum, uint16_t ir) { Serial.print(lum); Serial.print(_separation); Serial.print(ir); Serial.print(_separation); };
+void DataDecoder::onLUM2(uint16_t lum, uint16_t ir) { Serial.print(lum); Serial.print(_separation); Serial.print(ir); Serial.print(_separation); };
+void DataDecoder::onMAG(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(_separation); Serial.print(y); Serial.print(_separation); Serial.print(z); Serial.print(_separation); };
+void DataDecoder::onTMP1(int16_t tmp) { Serial.print(tmp); Serial.print(_separation); };
+void DataDecoder::onTMP2(int16_t tmp) { Serial.print(tmp); Serial.print(_separation); };
+void DataDecoder::onTMP3(int16_t tmp) { Serial.print(tmp); Serial.print(_separation); };
+void DataDecoder::onTMP4(int16_t tmp) { Serial.print(tmp); Serial.print(_separation); };
+void DataDecoder::onINFRATHERM(int16_t infrat) { Serial.print(infrat); Serial.print(_separation); };
+void DataDecoder::onACCEL(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(_separation); Serial.print(y); Serial.print(_separation); Serial.print(z); Serial.print(_separation); };
+void DataDecoder::onGYRO(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(_separation); Serial.print(y); Serial.print(_separation); Serial.print(z); Serial.print(_separation); };
+void DataDecoder::onUnknown(uint16_t type, byte * ptr) { Serial.print("unknown"); Serial.print(_separation); };
 
 /* dealing with userdefined block depending on specified type */
-void DataChunkDecoder::onUserDefined(byte userblock[5]) {
+int DataDecoder::onUserDefined(byte userblock[]) {
 	// TODO : switch different types
+	int t_len = 0;
 	switch(userblock[0]) {
 	case DATATYPE_USERDEFINED_STR:
     	for(int i=1; i<5; i++) {
     		char c = (char)userblock[i];
    			Serial.print(c);
     	}
+    	t_len = 5;
     	break;
 	case DATATYPE_USERDEFINED_LONGINT:
 		Serial.print(*(long int *)(userblock+1));
+		t_len = 1 + sizeof(long int);
 		break;
 	case DATATYPE_USERDEFINED_INTEGER:
 		Serial.print(*(int *)(userblock+1));
+		t_len = 1 + sizeof(int);
 		break;
 	case DATATYPE_USERDEFINED_FLOAT:
 		Serial.print(*(float *)(userblock+1));
+		t_len = 1 + sizeof(float);
 		break;
 	case DATATYPE_USERDEFINED_HEX4:
 	default:
@@ -245,7 +270,9 @@ void DataChunkDecoder::onUserDefined(byte userblock[5]) {
     			Serial.print('0');
     		Serial.print(b,HEX);
     	}
+    	t_len = 5;
 	}
 	Serial.print(_separation);
+	return(t_len);
 }
 

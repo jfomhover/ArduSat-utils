@@ -23,8 +23,8 @@ it has been thought as a utility for sending packets through the SAT_AppStorage 
 ********************************************************************
 */
 
-#ifndef _DATACHUNKDECODER_H_
-#define _DATACHUNKDECODER_H_
+#ifndef _DATADECODER_H_
+#define _DATADECODER_H_
 
 #include <Arduino.h>
 #include "datalib_datatypes.h"
@@ -32,16 +32,17 @@ it has been thought as a utility for sending packets through the SAT_AppStorage 
 #define PACKET_SIZE_CHUNKHEADER  3
 #define PACKET_DECODER_SEPARATIONDEFAULT	';'
 
-class DataChunkDecoder {
+class DataDecoder {
   struct packet_chunk_header * header;
   uint16_t currentDatatypes;
   char _separation;
   public:
-    DataChunkDecoder();
+    DataDecoder();
     void init();
     void setSeparation(char c);
     int getChunkLength(byte * buffer);
     boolean parseChunk(byte * buffer);
+    boolean parseUserPacket(byte * buffer);
     boolean parseFile(Stream &dataFile, byte * buffer, int bufferlen);
     virtual void onDataChange(uint16_t newtypes);
     virtual void onDatatype(uint16_t type, byte * ptr);  // what we should do when a datatype is detected    
@@ -56,8 +57,8 @@ class DataChunkDecoder {
     virtual void onINFRATHERM(int16_t infrat);
     virtual void onACCEL(int16_t x, int16_t y, int16_t z);
     virtual void onGYRO(int16_t x, int16_t y, int16_t z);
-    virtual void onUserDefined(byte userblock[5]);
+    virtual int onUserDefined(byte userblock[]);
     virtual void onUnknown(uint16_t type, byte * ptr);
 };
 
-#endif /* _DATACHUNKDECODER_H_ */
+#endif /* _DATADECODER_H_ */
