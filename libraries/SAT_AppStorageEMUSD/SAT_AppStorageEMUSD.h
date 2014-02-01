@@ -29,8 +29,6 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <Arduino.h>
-#include <nanosat_message.h>
-#include <OnboardCommLayer.h>
 
 class SAT_AppStorageEMUSD
 {

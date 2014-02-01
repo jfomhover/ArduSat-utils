@@ -29,11 +29,11 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <I2C_add.h>
-#include <nanosat_message.h>
-#include <EEPROM.h>
-#include <SD.h>
 #include <avr/pgmspace.h>
+#include <SD.h>
+#include <nanosat_message.h>
+#include <I2C_add.h>
+#include <OnboardCommLayer.h>
 #include "SAT_AppStorageEMUSD.h"
 
 #define CHIPSELECT	4
@@ -91,7 +91,7 @@ static File dataFile;
 
 SAT_AppStorageEMUSD::SAT_AppStorageEMUSD()
 {
-	nodeAddress_  = EEPROM.read(0x00);
+	nodeAddress_  = I2C_ADD_ARD1;	// pose as Arduino Node 1
 	debugMode_ = false;
 	SDavailable_ = false;
 	dataCount_ = 0;
@@ -123,7 +123,8 @@ void SAT_AppStorageEMUSD::init(boolean debug, int csPin, boolean append, char * 
 		SDavailable_ = true;
 		if (debugMode_)	ASEMUSD_printPROGMEMString(PGM_STRING_INITIALIZED);
 		if (!append) {
-	  		bool t_b = SD.remove(filename_);
+			SD.remove(filename_);
+// TODO:	bool t_b = SD.remove(filename_);
 	  		if (debugMode_)	ASEMUSD_printPROGMEMString(PGM_STRING_FILEERASED);
 	  		else				ASEMUSD_printPROGMEMString(PGM_STRING_FILENOTERASED);
 		}
@@ -184,7 +185,7 @@ void SAT_AppStorageEMUSD::send(byte *data, unsigned int offset, unsigned int len
 
 	if(debugMode_) {
 		ASEMUSD_printPROGMEMString(PGM_STRING_SENDINGBYTES);
-		for (int i=offset; i<length; i++) {
+		for (unsigned int i=offset; i<length; i++) {
 			if (data[i]<0x10) {Serial.print('0');}
 			Serial.print(data[i],HEX);
 			Serial.print(' ');
