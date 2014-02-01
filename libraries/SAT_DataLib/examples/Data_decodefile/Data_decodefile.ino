@@ -17,8 +17,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ********************************************************************
 
-Description :  example of a "chunk" of data (timestamped set of data, raw values pulled from the ArduSat sensors)
-here we use a prior packet to decode it using the decoding scheme
+    Description :  decodes a file on the SD card that containts packets of data
+                   formatted as specified in the SAT_DataLib coding scheme
+                   https://github.com/jfomhover/ArduSat-utils
+                   Also see SAT_AppStorageEMUSD examples
+    Last Changed : Feb. 1, 2014
 
 ********************************************************************
 */
@@ -26,24 +29,13 @@ here we use a prior packet to decode it using the decoding scheme
 #include <SD.h>
 #include <SAT_DataLib.h>
 
-const int chipSelect = 4;
-char filename[] = "udpacket.bin";
-byte buffer[40];
+const int chipSelect = 4;              // pin used as ChipSelect (see SD library)
+char filename[] = "fullpack.bin";      // name of the file on SD
+byte buffer[64];                       // a buffer for the decoder to run, I recommend at least 64 bytes of data
 
-// use the syntax beloc to declare the datatypes you'll need
+
 DataDecoder decoder;
 
-
-// just a function for demonstrating the functions
-// this function outputs a binary message in hexadecimal on serial
-void dumphex(byte * data, int len) {
-  for (int i=0; i<len; i++) {
-    if (data[i]<0x10) {Serial.print('0');}
-      Serial.print(data[i],HEX);
-      Serial.print(' ');
-    }
-    Serial.print('\n');
-}
 
 void setup() {
   // put your setup code here, to run once:
@@ -53,7 +45,7 @@ void setup() {
   // make sure that the default chip select pin is set to
   // output, even if you don't use it:
   pinMode(10, OUTPUT);
-  
+
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
     Serial.println("Card failed, or not present");
@@ -70,15 +62,15 @@ void setup() {
   if (dataFile) {
     decoder.parseFile(dataFile, buffer, 40);
     dataFile.close();
-  }  
+  }
   // if the file isn't open, pop up an error:
   else {
     Serial.println("error opening datachk.bin");
-  } 
-  
+  }
+
 }
 
 
 void loop() {
-  // put your main code here, to run repeatedly: 
+  // put your main code here, to run repeatedly:
 }

@@ -17,108 +17,86 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ********************************************************************
 
-    Description :  sketch that demonstrates how to use the "USERDEFINED" blocks from SAT_DataLib
+    Description :  sketch that demonstrates how to use the user defined packets from SAT_DataLib
                    https://github.com/jfomhover/ArduSat-utils
-    Last Changed : Jan. 27, 2014
+    Last Changed : Feb. 1, 2014
 
 ********************************************************************
 */
 
 
 #include <Arduino.h>
-#include <Wire.h>              // NOTE: we don't call any real sensor in this sketch, so this line is unneccesary
-#include <EEPROM.h>
-#include <OnboardCommLayer.h>  // NOTE: we don't call any real sensor in this sketch, so this line is unneccesary
 #include <SAT_DataLib.h>
-#include <SD.h>
-#include <SAT_AppStorageEMUSD.h>  // experiment data channel (on SD, see library at https://github.com/jfomhover/ArduSat-utils)
-
-
-// *************************
-// *** EXPERIMENT CONFIG ***
-// *************************
-
-#define PULL_DELAY 5000        // data is pooled every PULL_DELAY milliseconds
-
-// NOTE : configuration of the debug mode for writing on SD card
-#define CS_PIN      4    // 4 for Arduino Ethernet
-#define SD_FILENAME  "udpacket.bin"
-
-
-// *********************
-// *** SDK INSTANCES ***
-// *********************
-
-SAT_AppStorageEMUSD store;    // experiment data channel (via SD, see library at https://github.com/jfomhover/ArduSat-utils )
 
 
 // ***********************
 // *** DATA STRUCTURES ***
 // ***********************
 
-// structured packet of data, easy to decode after reception (see https://github.com/jfomhover/ArduSat-utils for syntax)
-// for this example sketch we keep only DATATYPE_MS and DATATYPE_USERDEFINED1
+// structured packet of data, user defined
+// it is formatted in order to be decoded after reception (see https://github.com/jfomhover/ArduSat-utils for syntax)
 struct _dataPacket {
-  char header;
-  uint8_t len;
-  uint8_t type1;
-  float fval;
-  uint8_t type2;
-  int ival;
-  uint8_t type3;
-  unsigned long int lval;
-  uint8_t type4;
-  byte hex4val[4];
-  uint8_t type5;
-  char charval[4];
+  char header;	// should contain PACKET_HEADER_USERPACKET ('U'), see datalib_defs.h
+  uint8_t len;	// should indicate the total length of the packet, for instance use sizeof(struct _dataPacket)
+
+  // then, each user defined data is structured by a TYPE/VALUE sequence
+  uint8_t type1;	// TYPE : for a float, use DATATYPE_UNIT_FLOAT (12)
+  float fval;		// VALUE : fill with the value you'd like
+
+  uint8_t type2;	// TYPE : for an int (2 bytes, "short int"), use DATATYPE_UNIT_INTEGER
+  int ival;			// VALUE : fill with the int value
+
+  uint8_t type3;			// TYPE : for an unsigned long int, use DATATYPE_UNIT_ULONGINT
+  unsigned long int lval;	// VALUE...
+
+  uint8_t type4;	// TYPE : for an hexadecimal sequence of 4 bytes, use DATATYPE_UNIT_HEX4
+  byte hex4val[4];	// VALUE : here, the array of bytes
+
+  uint8_t type5;	// TYPE : for 4 chars (no more, no less), use DATATYPE_UNIT_STR
+  char charval[4];	// VALUE : here, the array of chars
 } data;
 
 #define PACKET_SIZE sizeof(struct _dataPacket)
 
 // erasing all values in the data chunk
-void resetChunk() {
+void resetPacket() {
   byte * t_ptr = (byte*)&data;
-  for (int i=0; i<PACKET_SIZE; i++)
+  for (unsigned int i=0; i<PACKET_SIZE; i++)
     t_ptr[i] = 0x00;
 }
 
 
-// ************************
-// *** SENSOR FUNCTIONS ***
-// ************************
+// **********************
+// *** PULLING VALUES ***
+// **********************
 
-// SETUP OF THE SENSORS NEEDED (constructors mainly)
-void setupSensors() {
-  // NOTE : add the setup functions you'd like, in this sketch, none is needed
-}
-
-
-// pulling values from the sensors and filling the data structure
+// pulling values and filling the data structure
+// IRL, these values would came from pulling sensors, or computing some parameters...
 void pullValues() {
   // STEP 1 : use the header ('U') for the packet to be decoded by SAT_DataLib
   data.header = PACKET_HEADER_USERPACKET;
-  
-  // STEP 2 : 
+
+  // STEP 2 : indicate the size of the packet
   data.len = PACKET_SIZE;
-  
+
   // STEP 3 : fill the structure with the raw values you want to capture
-  data.type1 = DATATYPE_USERDEFINED_FLOAT;
+  // see the structure above for explanation on type1...type5
+  data.type1 = DATATYPE_UNIT_FLOAT;
   data.fval = 3.1415;
-  
-  data.type2 = DATATYPE_USERDEFINED_INTEGER;
+
+  data.type2 = DATATYPE_UNIT_INTEGER;
   data.ival = 42;
-  
-  data.type3 = DATATYPE_USERDEFINED_LONGINT;
+
+  data.type3 = DATATYPE_UNIT_LONGINT;
   data.lval = 48151623;
-  
-  data.type4 = DATATYPE_USERDEFINED_HEX4;
+
+  data.type4 = DATATYPE_UNIT_HEX4;
   data.hex4val[0] = 0xAB;
   data.hex4val[1] = 0xCD;
   data.hex4val[2] = 0xEF;
   data.hex4val[3] = 0x01;
-  
-  // OPTION "STRING"
-  data.type5 = DATATYPE_USERDEFINED_STR;
+
+  data.type5 = DATATYPE_UNIT_STR;
   data.charval[0] = 'S';
   data.charval[1] = 'T';
   data.charval[2] = 'O';
@@ -126,62 +104,40 @@ void pullValues() {
 };
 
 
-// *********************************************************************
-// NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
-// *********************************************************************
-// The remaining setup() and loop() just calls for the functions above
-// It "pulls" the sensors regularly and sends the data chunk to SAT_AppStorageEMUSD
+// *************
+// *** DEBUG ***
+// *************
 
+// just a function for demonstrating the functions
+// this function outputs a binary message in hexadecimal on serial
+void dumphex(byte * data, int len) {
+  for (int i=0; i<len; i++) {
+    if (data[i]<0x10) {Serial.print('0');}
+      Serial.print(data[i],HEX);
+      Serial.print(' ');
+    }
+    Serial.print('\n');
+}
 
-// ******************
-// *** MAIN SETUP ***
-// ******************
-
-byte buffer[40];
+// ********************
+// *** SETUP + LOOP ***
+// ********************
 
 void setup() {
   Serial.begin(9600);
-
-  OBCL.begin();             // setups the communication via I2C (sensors + AppStorage)
-
-  store.init( true, CS_PIN, false, SD_FILENAME ); // debug : outputing verbose lines on Serial + write result on SD file
-  
-  setupSensors();
 }
 
-
-// *****************
-// *** MAIN LOOP ***
-// *****************
- 
-signed long int previousMs = 0;
-signed long int nextMs = 0;
-int dataSent = 0;
 
 void loop() {
-  resetChunk();      // zeroes the data structure
+  resetPacket();	// zeroes the data structure (you'd better clean things, you never know)
+  pullValues();		// fills the data structure with values
 
-  nextMs = PULL_DELAY-(millis()-previousMs);  // "(not so) intelligent delay" : just the ms needed to have a regular timing, takes into account the delay of all the functions in the loop
-  previousMs += PULL_DELAY;
-  
-  if (nextMs > 0)
-    delay(nextMs); //wait for next pull
-  else
-    previousMs += PULL_DELAY; // we missed a beat, skip one to get back on regular track
+  // the data is now ready to be sent !
+  // for instance, use SAT_AppStorage.send((byte*)&data, 0, sizeof(struct _dataPacket));
 
-  pullValues();   // pull the values needed
+  dumphex((byte*)&data, PACKET_SIZE);		// displays the binary content of the data structure, for pedagogical purpose here ^^
 
-  byte * t_ptr = (byte *)&data;
-  store.send(t_ptr, 0, PACKET_SIZE);   // sends data into the communication file and queue for transfer
-                                       // WARNING : introduces a 100ms delay
+  // should output : 55 19 0C 56 0E 49 40 06 2A 00 04 47 BC DE 02 00 AB CD EF 01 0D 53 54 4F 50
 
-  dataSent += PACKET_SIZE;
-  
-/*
-  if ((dataSent + PACKET_SIZE) > 10240) {
-    // TODO : close experiments, clean mode ?
-    // my understanding is : that will be done automatically when we reach the 10kb limit
-  }
-*/
+  delay(5000);
 }
-

@@ -26,8 +26,8 @@ it has been thought as a utility for sending packets through the SAT_AppStorage 
 #include <Arduino.h>
 #include "SAT_DataLib.h"
 #include "datalib_syntax.h"
+#include "datalib_defs.h"
 #include "datalib_datatypes.h"
-#include "datalib_userdefined.h"
 
 uint16_t alldatatypes[DATATYPE_KNOWNCOUNT] = {
   DATATYPE_MS,

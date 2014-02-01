@@ -41,8 +41,10 @@ class DataDecoder {
     void init();
     void setSeparation(char c);
     int getChunkLength(byte * buffer);
-    boolean parseChunk(byte * buffer);
+    boolean parseChunkPacket(byte * buffer);
     boolean parseUserPacket(byte * buffer);
+    boolean parseLogPacket(byte * buffer);
+    boolean parseBuffer(byte * buffer);
     boolean parseFile(Stream &dataFile, byte * buffer, int bufferlen);
     virtual void onDataChange(uint16_t newtypes);
     virtual void onDatatype(uint16_t type, byte * ptr);  // what we should do when a datatype is detected    
@@ -59,6 +61,7 @@ class DataDecoder {
     virtual void onGYRO(int16_t x, int16_t y, int16_t z);
     virtual int onUserDefined(byte userblock[]);
     virtual void onUnknown(uint16_t type, byte * ptr);
+    virtual void onString(char * buffer, int len);
 };
 
 #endif /* _DATADECODER_H_ */

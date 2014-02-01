@@ -67,7 +67,7 @@ int DataDecoder::getChunkLength(byte * buffer) {
       return(computeChunkSize(t_ptr->datatypes));
 };
 
-boolean DataDecoder::parseChunk(byte * buffer) {
+boolean DataDecoder::parseChunkPacket(byte * buffer) {
         header = (struct packet_chunk_header *)buffer;
         
       if (header->datatypes != currentDatatypes) {
@@ -95,6 +95,31 @@ boolean DataDecoder::parseUserPacket(byte * buffer) {
 	Serial.print('\n');
 };
 
+boolean DataDecoder::parseLogPacket(byte * buffer) {
+	Serial.print("*** ");
+	onString((char*)(buffer+2), buffer[1]-2);
+	Serial.print('\n');
+};
+
+boolean DataDecoder::parseBuffer(byte * buffer) {
+	switch(buffer[0]) {
+	case PACKET_HEADER_CHUNK:
+		parseChunkPacket(buffer);
+		break;
+	case PACKET_HEADER_USERPACKET:
+		parseUserPacket(buffer);
+		break;
+	case PACKET_HEADER_LOGPACKET:
+		parseLogPacket(buffer);
+		break;
+	default:
+		Serial.println("!!! HEADER MISMATCH");
+		return(false);
+		break;
+	}
+	return(true);
+};
+
 boolean DataDecoder::parseFile(Stream &dataFile, byte * buffer, int bufferlen) {
   header = (struct packet_chunk_header *)buffer;
 
@@ -117,7 +142,7 @@ boolean DataDecoder::parseFile(Stream &dataFile, byte * buffer, int bufferlen) {
           return(false);
         }
         
-      parseChunk(buffer);
+      parseChunkPacket(buffer);
     } else if (buffer[0] == PACKET_HEADER_USERPACKET){
         buffer[1] = dataFile.read();
     	int expectedLen = buffer[1];
@@ -129,6 +154,17 @@ boolean DataDecoder::parseFile(Stream &dataFile, byte * buffer, int bufferlen) {
             return(false);
           }
         parseUserPacket(buffer);
+    } else if (buffer[0] == PACKET_HEADER_LOGPACKET) {
+    	buffer[1] = dataFile.read();
+    	int expectedLen = buffer[1];
+        for (int i=2; i<expectedLen; i++)
+          if (dataFile.available())
+            buffer[i] = dataFile.read();
+          else {
+            Serial.println("!!! NOT ENOUGH DATA");
+            return(false);
+          }
+        parseLogPacket(buffer);
     } else {
       Serial.println("!!! HEADER MISMATCH");
       continue;
@@ -238,39 +274,45 @@ void DataDecoder::onACCEL(int16_t x, int16_t y, int16_t z) { Serial.print(x); Se
 void DataDecoder::onGYRO(int16_t x, int16_t y, int16_t z) { Serial.print(x); Serial.print(_separation); Serial.print(y); Serial.print(_separation); Serial.print(z); Serial.print(_separation); };
 void DataDecoder::onUnknown(uint16_t type, byte * ptr) { Serial.print("unknown"); Serial.print(_separation); };
 
+void DataDecoder::onString(char * buffer, int len) {
+	for(int i=0; i<len; i++)
+		Serial.print(buffer[i]);
+	Serial.print(_separation);
+};
+
 /* dealing with userdefined block depending on specified type */
 int DataDecoder::onUserDefined(byte userblock[]) {
 	// TODO : switch different types
 	int t_len = 0;
 	switch(userblock[0]) {
-	case DATATYPE_USERDEFINED_STR:
+	case DATATYPE_UNIT_STR:
     	for(int i=1; i<5; i++) {
     		char c = (char)userblock[i];
    			Serial.print(c);
     	}
     	t_len = 5;
     	break;
-	case DATATYPE_USERDEFINED_UINT4:
+	case DATATYPE_UNIT_UINT4:
 		Serial.print(*(uint32_t *)(userblock+1));
 		t_len = 1 + sizeof(uint32_t);
 		break;
-	case DATATYPE_USERDEFINED_UINT2:
+	case DATATYPE_UNIT_UINT2:
 		Serial.print(*(uint16_t *)(userblock+1));
 		t_len = 1 + sizeof(uint16_t);
 		break;
-	case DATATYPE_USERDEFINED_INT4:
+	case DATATYPE_UNIT_INT4:
 		Serial.print(*(int32_t *)(userblock+1));
 		t_len = 1 + sizeof(int32_t);
 		break;
-	case DATATYPE_USERDEFINED_INT2:
+	case DATATYPE_UNIT_INT2:
 		Serial.print(*(int16_t *)(userblock+1));
 		t_len = 1 + sizeof(int16_t);
 		break;
-	case DATATYPE_USERDEFINED_FLOAT:
+	case DATATYPE_UNIT_FLOAT:
 		Serial.print(*(float *)(userblock+1));
 		t_len = 1 + sizeof(float);
 		break;
-	case DATATYPE_USERDEFINED_HEX4:
+	case DATATYPE_UNIT_HEX4:
 	default:
     	for(int i=1; i<5; i++) {
     		byte b = userblock[i];

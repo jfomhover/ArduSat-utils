@@ -17,12 +17,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ********************************************************************
 
-    Description :  sketch that demonstrates how to use chunk packets with the "USERDEFINED" blocks
+    Description :  sketch that demonstrates how to use the user defined packets from SAT_DataLib
                    https://github.com/jfomhover/ArduSat-utils
     Last Changed : Feb. 1, 2014
 
 ********************************************************************
 */
+
 
 #include <Arduino.h>
 #include <SAT_DataLib.h>
@@ -35,14 +36,12 @@ limitations under the License.
 // structured packet of data, easy to decode after reception (see https://github.com/jfomhover/ArduSat-utils for syntax)
 // for this example sketch we use a Log packet
 struct _dataPacket {
-  char header;                 // should be set to PACKET_HEADER_CHUNK ('#')
+  char header;	// should be set to PACKET_HEADER_LOGPACKET ('L')
+  uint8_t len;	// should be set to the REAL total length of the packet
+  	  	  	    // (for instance, PACKET_SIZE_LOGHEADER + strlen(data.string));
 
-  uint16_t datatypes;          // should indicate all the datatypes by union of the values
-                               // in this sketch data.dataypes = DATATYPE_MS | DATATYPE_USERDEFINED1 | DATATYPE_USERDEFINED2
-
-  long int ms;                 // corresponding to datatype DATATYPE_MS
-  byte userdefinedblock[5];    // block of 5 bytes corresponding to datatype DATATYPE_USERDEFINED1
-  byte userdefinedblock2[5];   // block of 5 bytes corresponding to datatype DATATYPE_USERDEFINED2
+  char string[64];	// buffer for the string we'd like to send
+  	  	  	  	  	// we won't send 64 chars, but only the length really used
 } data;
 
 #define PACKET_SIZE sizeof(struct _dataPacket)
@@ -62,39 +61,17 @@ void resetPacket() {
 // pulling values and filling the data structure
 // IRL, these values would came from pulling sensors, or computing some parameters...
 void pullValues() {
-  // STEP 1 : always use the header ('#') for the packet to be decoded by SAT_DataLib
-  data.header = PACKET_HEADER_CHUNK;
+	  // STEP 1 : use the header ('L') for the packet to be decoded by SAT_DataLib
+	  data.header = PACKET_HEADER_LOGPACKET;
 
-  // STEP 2 : put all the datatypes you want to use in data.datatypes (make an OR of all DATATYPE_* constants you want)
-  data.datatypes = DATATYPE_MS | DATATYPE_USERDEFINED1 | DATATYPE_USERDEFINED2;
+	  // STEP 2 : fill the structure with the chars you'd like to send
+	  sprintf(data.string, "log anything here");
 
-  // STEP 3 : fill the structure with the raw values you want to capture
-  // NOTE : in this sketch, only MS and USERDEFINED1 are "pulled"
-  data.ms = millis();
-
-  // you can fill the remaining 4 bytes one by one like below
-  // OPTION HEX
-  data.userdefinedblock[0] = DATATYPE_UNIT_HEX4; // using this as first byte will display the other 4 bytes in binary format on the decoder
-  data.userdefinedblock[1] = 0x04;
-  data.userdefinedblock[2] = 0x08;
-  data.userdefinedblock[3] = 0x15;
-  data.userdefinedblock[4] = 0x16;
-
-  // OPTION "STRING"
-  data.userdefinedblock2[0] = DATATYPE_UNIT_STR; // using this as first byte will display the other 4 bytes as chars
-  data.userdefinedblock2[1] = 'S';
-  data.userdefinedblock2[2] = 'T';
-  data.userdefinedblock2[3] = 'O';
-  data.userdefinedblock2[4] = 'P';
-
-  // or you can fill with a value taken from somewhere...
-//  data.userdefinedblock[0] = DATATYPE_UNIT_UINT4; // using this as first byte will display the other 4 bytes as an unsigned long int
-//  unsigned long int whatever = 481516;
-//  memcpy((void*)(data.userdefinedblock), (void*)&whatever, sizeof(whatever));  // copy the bytes of the unsigned long int to the block
-
-  // see datalib_defs.h for the possible types
-
-  // THAT'S IT ^^
+	  // STEP 3 : align the data.len with the REAL total length of the packet
+	  // if you set it to sizeof(struct _dataPacket) [like in other sketches]
+	  // you will send more chars than needed because of the maximum size of the buffer (64)
+	  // PACKET_SIZE_LOGHEADER = 2 (sizeof(char) for data.header + sizeof(uint8_t) for data.len)
+	  data.len = PACKET_SIZE_LOGHEADER+strlen(data.string);
 };
 
 
@@ -129,7 +106,7 @@ void loop() {
   // the data is now ready to be sent !
   // for instance, use SAT_AppStorage.send((byte*)&data, 0, sizeof(struct _dataPacket));
 
-  dumphex((byte*)&data, PACKET_SIZE);		// displays the binary content of the data structure, for pedagogical purpose here ^^
+  dumphex((byte*)&data, data.len);		// displays the binary content of the data structure, for pedagogical purpose here ^^
 
   // should output : 53 13 6C 6F 67 20 61 6E 79 74 68 69 6E 67 20 68 65 72 65
 

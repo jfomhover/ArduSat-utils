@@ -28,13 +28,6 @@ it has been thought as a utility for sending packets through the SAT_AppStorage 
 
 #include <Arduino.h>
 #include "datalib_datatypes.h"
-#include "datalib_userdefined.h"
-
-struct packet_chunk_header {
-  char header;          // don't touch that, or adapt it, whatever ^^
-  uint16_t datatypes;
-};
-
 
 uint16_t getDatatype(int i);
 int computeChunkSize(uint16_t types);

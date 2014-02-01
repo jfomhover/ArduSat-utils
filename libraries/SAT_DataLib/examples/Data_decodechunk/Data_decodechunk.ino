@@ -17,28 +17,64 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ********************************************************************
 
-Description :  example of a "chunk" of data (timestamped set of data, raw values pulled from the ArduSat sensors)
-here we use a prior packet to decode it using the decoding scheme
+    Description :  decoding "packets" of data
+                   for the purpose of this sketch, example packets are taken in the other example sketches
+                   (Data_logpacket, Data_userpacket, Data_...) to demonstrate the use of the decoding scheme
+                   Also see Data_decodefile for decoding binary packets stores on a SD file (via SAT_AppStorageEMUSD)
+                   (see https://github.com/jfomhover/ArduSat-utils)
+    Last Changed : Feb. 1, 2014
 
 ********************************************************************
 */
 
 #include <SAT_DataLib.h>
 
-/* NOTE :
-  the chunk will look like (hex) : 23 3100 MMMMMMMM XXXX YYYY
-  23 : constant header for a chunk
-  3100 : DATATYPE_MS=0x0001 | DATATYPE_SAT_TMP1=0x0x0010 | DATATYPE_SAT_TMP2=0x0020 => 0x0031, stored in little endian = 31 00
-  MMMMMMMM : millis, stored as an unsigned long int (4 bytes)
-  XXXX : temp 1 stored as an unsigned short int (raw value)
-  XXXX : temp 2 stored as an unsigned short int (raw value)
-*/
-byte message1[11] = { 0x23, 0x31, 0x00, 0xAD, 0x62, 0x03, 0x00, 0x19, 0x00, 0x40, 0x01 };
+
+DataDecoder decoder;	// class used for decoding packets
 
 
-// use the syntax beloc to declare the datatypes you'll need
-DataDecoder decoder;
+// ***********************
+// *** PACKET EXAMPLES ***
+// ***********************
 
+// Output taken from the Data_buildchunk.ino example sketch
+byte chunkpacket[11] = {
+		0x23, 0x31, 0x00, 0xF2, 0x07, 0x00, 0x00, 0x19, 0x00, 0x40, 0x01
+};
+
+
+// Output taken from the Data_userdefinedblock.ino
+byte chunkudblockpacket[17] = {
+		0x23, 0x01, 0x60, 0xE9, 0x03, 0x00, 0x00, 0x00,
+		0x04, 0x08, 0x15, 0x16, 0x0D, 0x53, 0x54, 0x4F,
+		0x50
+};
+
+// Output taken from the EMUSD_send_chunk.ino
+byte chunktmppacket[15] = {
+		0x23, 0xF1, 0x00, 0xA3, 0x15, 0x00, 0x00, 0x04,
+		0x00, 0x08, 0x00, 0x0F, 0x00, 0x10, 0x00 
+};
+
+// Output of the Data_userpacket.ino example sketch
+byte userpacket[25] = {
+		0x55, 0x19, 0x0C, 0x56, 0x0E, 0x49, 0x40, 0x06,
+		0x2A, 0x00, 0x04, 0x47, 0xBC, 0xDE, 0x02, 0x00,
+		0xAB, 0xCD, 0xEF, 0x01, 0x0D, 0x53, 0x54, 0x4F,
+		0x50
+};
+
+// Output of the Data_logpacket.ino example sketch
+byte logpacket[19] = {
+		0x53, 0x13, 0x6C, 0x6F, 0x67, 0x20, 0x61, 0x6E,
+		0x79, 0x74, 0x68, 0x69, 0x6E, 0x67, 0x20, 0x68,
+		0x65, 0x72, 0x65
+};
+
+
+// *************
+// *** DEBUG ***
+// *************
 
 // just a function for demonstrating the functions
 // this function outputs a binary message in hexadecimal on serial
@@ -48,22 +84,45 @@ void dumphex(byte * data, int len) {
       Serial.print(data[i],HEX);
       Serial.print(' ');
     }
-    Serial.print('\n');
+  Serial.print('\n');
 }
+
+
+// ********************
+// *** SETUP + LOOP ***
+// ********************
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
 
-  Serial.print("packet[len=");           // display the packet
-  Serial.print(11);
-  Serial.print("] : ");
-  dumphex(message1, 11);
+  Serial.print("packet[]= ");           // display the packet
+  dumphex(chunkpacket, 11);
+  decoder.parseBuffer(chunkpacket);     // decodes one packet
+  Serial.print('\n');
+  
+  Serial.print("packet[]= ");           // display the packet
+  dumphex(chunkudblockpacket, 17);
+  decoder.parseBuffer(chunkudblockpacket);     // decodes one packet
+  Serial.print('\n');
 
-  decoder.parseChunk(message1);
+  Serial.print("packet[]= ");           // display the packet
+  dumphex(chunktmppacket, 15);
+  decoder.parseBuffer(chunktmppacket);     // decodes one packet
+  Serial.print('\n');
+
+  Serial.print("packet[]= ");           // display the packet
+  dumphex(userpacket, 25);
+  decoder.parseBuffer(userpacket);      // decodes one packet
+  Serial.print('\n');
+
+  Serial.print("packet[]= ");           // display the packet
+  dumphex(logpacket, 19);
+  decoder.parseBuffer(logpacket);       // decodes one packet
+  Serial.print('\n');
 }
 
 
 void loop() {
-  // put your main code here, to run repeatedly: 
+  // nothing done here...
 }

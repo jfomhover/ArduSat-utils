@@ -26,42 +26,17 @@ it has been thought as a utility for sending packets through the SAT_AppStorage 
 #include <Arduino.h>
 #include <util/crc16.h>
 #include "SAT_DataLib.h"
+#include "datalib_defs.h"
 #include "datalib_syntax.h"
 #include "DataChunkBuilder.h"
 
-/* 
-// NOTE : for memory only
-struct packet_chunk_header {
-  char header;          // don't touch that, or adapt it, whatever ^^
-  uint16_t datatypes;
+
+DataChunkBuilder::DataChunkBuilder(byte * buffer) {
+      _packet = buffer;
+      _length = 0;
+      _datatypes = 0;
+      _header = (struct packet_chunk_header *)_packet;
 };
-
-// NOTE : below, the structure model used for packets
-struct _packet_chunk_struct {
-  char header;          // don't touch that, or adapt it, whatever ^^
-  uint16_t datatypes;
-
-  long int ms;                 // DATATYPE_MS
-  uint16_t tsl_one_ir;         // DATATYPE_SAT_LUM1
-  uint16_t tsl_one_full;       // DATATYPE_SAT_LUM1
-  uint16_t tsl_two_ir;         // DATATYPE_SAT_LUM2
-  uint16_t tsl_two_full;       // DATATYPE_SAT_LUM2
-  int16_t mag_values[3];       // DATATYPE_SAT_MAG
-  int16_t temp_value1;         // DATATYPE_SAT_TMP1
-  int16_t temp_value2;         // DATATYPE_SAT_TMP2
-  int16_t temp_value3;         // DATATYPE_SAT_TMP3
-  int16_t temp_value4;         // DATATYPE_SAT_TMP4
-  int16_t infrat_value;        // DATATYPE_SAT_INFRATHERM
-  int16_t accel[3];            // DATATYPE_SAT_ACCEL
-  int16_t gyro[3];             // DATATYPE_SAT_GYRO
-
-  // DATATYPE_SAT_GEIGER
-// TODO : long geiger_cpm1;
-// TODO : float 
-
-  uint16_t  crc16;  // DATATYPE_CRC16
-};
-*/
 
 DataChunkBuilder::DataChunkBuilder(uint16_t datatypes, byte * buffer) {
       _packet = buffer;
@@ -70,7 +45,7 @@ DataChunkBuilder::DataChunkBuilder(uint16_t datatypes, byte * buffer) {
       _header = (struct packet_chunk_header *)_packet;
 };
     
-void DataChunkBuilder::reinit(uint16_t datatypes) {
+void DataChunkBuilder::init(uint16_t datatypes) {
       _length = computeChunkSize(datatypes);
       _datatypes = datatypes;      
 };

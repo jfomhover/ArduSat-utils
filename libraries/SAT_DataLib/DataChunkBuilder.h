@@ -27,15 +27,6 @@ it has been thought as a utility for sending packets through the SAT_AppStorage 
 #define _DATACHUNKBUILDER_H_
 
 #include <Arduino.h>
-#include <util/crc16.h>
-#include "datalib_syntax.h"
-
-/* NOTE : for memory only
-struct packet_chunk_header {
-  char header;          // don't touch that, or adapt it, whatever ^^
-  uint16_t datatypes;
-};
-*/
 
 class DataChunkBuilder {
   private :
@@ -45,8 +36,9 @@ class DataChunkBuilder {
     struct packet_chunk_header * _header;  // struct of the packet header (at the beginning of the buffer)
     
   public :
+    DataChunkBuilder(byte * buffer);						// constructor with external buffer
     DataChunkBuilder(uint16_t datatypes, byte * buffer);   // construct the class and aligns the buffer with the given datatypes
-    void reinit(uint16_t datatypes);                       // reconstructs the class and realigns the internal buffer using the new given datatypes
+    void init(uint16_t datatypes);                       // reconstructs the class and realigns the internal buffer using the new given datatypes
     void open();                                           // initializes the packet
     void close();                                          // closes the packet (CRC16 if needed)
     void set(uint16_t type, byte * value);                 // sets the datatype (index "type") with the value at pointer "value"
