@@ -263,12 +263,5 @@ void SAT_AppStorageEMUSD::write2SD(byte data[], unsigned int offset, unsigned in
 		  dataFile.write(data+offset,length);
 		  dataFile.flush();
 //		  dataFile.close(); // we never close... too bad hu ?
-		  if (debugMode_)
-			  for(int i=0; i<3; i++) {
-				  digitalWrite(9,HIGH);
-				  delay(50);
-				  digitalWrite(9,LOW);
-		  		  delay(50);
-			  }
 	  }
 }
