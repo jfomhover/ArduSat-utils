@@ -34,50 +34,50 @@ boolean isAlphaNum(byte b) {
   */ 
 };
 
-void specialPrintByte(byte inByte) {
+void specialPrintByte(byte inByte, Stream * str) {
     if (inByte < 0x10)
-      Serial.print('0');
-    Serial.print(inByte, HEX);
-    Serial.print(' ');
+      str->print('0');
+    str->print(inByte, HEX);
+    str->print(' ');
 };    
 
-void specialPrintChar(byte inByte) {
+void specialPrintChar(byte inByte, Stream * str) {
     if (isAlphaNum(inByte))
-      Serial.write(inByte);
+      str->write(inByte);
     else
-      Serial.print(' ');
+      str->print(' ');
 };
 
-void specialPrintBuffer(char * prefix, byte * buffer, int bufferLen) {
+void specialPrintBuffer(char * prefix, byte * buffer, int bufferLen, Stream * str) {
       int byteCount = 0;
-      Serial.print(prefix);
-      Serial.print("[hex]:\t");
+      str->print(prefix);
+      str->print("[hex]:\t");
       for (int i=0; i<bufferLen; i++) {
-        specialPrintByte(buffer[i]);
+        specialPrintByte(buffer[i], str);
         byteCount++;
         if (byteCount > 15) {
-          Serial.print('\n');
-          Serial.print(prefix);
-          Serial.print("[hex]:\t");
+          str->print('\n');
+          str->print(prefix);
+          str->print("[hex]:\t");
           byteCount=0;
         }
       }
 
-      Serial.print('\n');
-      Serial.print(prefix);
-      Serial.print("[asc]:\t");
+      str->print('\n');
+      str->print(prefix);
+      str->print("[asc]:\t");
       byteCount = 0;
       for (int i=0; i<bufferLen; i++) {
-        specialPrintChar(buffer[i]);
+        specialPrintChar(buffer[i], str);
         byteCount++;
         if (byteCount > 47) {
-          Serial.print('\n');
-          Serial.print(prefix);
-          Serial.print("[asc]:\t");
+          str->print('\n');
+          str->print(prefix);
+          str->print("[asc]:\t");
           byteCount=0;
         }
       }
-      Serial.print('\n');
+      str->print('\n');
 };
 
 #endif /* _SPECIALPRINT_H */

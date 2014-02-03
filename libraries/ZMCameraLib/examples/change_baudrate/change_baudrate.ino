@@ -21,6 +21,7 @@ limitations under the License.
 
 #include <Arduino.h>
 #include <ZMCameraLib.h>
+#include <SoftwareSerial.h>
 
 // *********************
 // *** CONFIGURATION ***

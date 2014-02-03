@@ -16,7 +16,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ********************************************************************
+
+Special for arduino UNO : use Serial (hardware) to establish a first contact
+with a camera set up on 115200 (out of factory)
+
+Debug output is displayed on SoftwareSerial(RX=7,TX=8).
+
+********************************************************************
 */
+
  
 #include <Arduino.h>
 #include <ZMCameraLib.h>
@@ -27,29 +35,18 @@ limitations under the License.
 // *********************
 
 // *** SERIAL / CAMERA ***
+#define SERIAL_SOFT_RX  7
+#define SERIAL_SOFT_TX  8
+#include <SoftwareSerial.h>
+SoftwareSerial mySerial(SERIAL_SOFT_RX, SERIAL_SOFT_TX); // RX, TX
 
-#include "config.h"      // includes the file "config.h" that contains all parameters
-                         // SERIAL_PORT, CS_PIN, SS_PIN, SERIAL_BAUDRATE...
-
-#define NEW_ZMCAMERA_ID  0x01  // the NEW ID you'd like the camera to have
-
-#define NEW_BAUDRATE     9600
-#define NEW_ZM_BAUDRATE  ZM_BAUDRATE_9600  // USE ONE OF THE CONSTANTS BELOW ACCORDING TO THE DESIRED BAUDRATE
-/* AVAILABLE CONSTANTS (see ZMCameraLib/ZMCameraLib.h)
-#define ZM_BAUDRATE_9600    '0'
-#define ZM_BAUDRATE_19200   '1'
-#define ZM_BAUDRATE_38400   '2'
-#define ZM_BAUDRATE_57600   '3'
-#define ZM_BAUDRATE_115200  '4'
-#define ZM_BAUDRATE_2400    '5'
-#define ZM_BAUDRATE_14400   '6'
-*/
+#define ZM_CAMERA_ID  0x01  // the ID of your camera, if unknown try 0xFF
 
 // ***************
 // *** CLASSES ***
 // ***************
 
-ZMCamera cam(&SERIAL_PORT);
+ZMCamera cam(&Serial);
 
 
 // ******************
@@ -58,30 +55,20 @@ ZMCamera cam(&SERIAL_PORT);
 
 void setup() {
   // initialize Serial for output
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   // initialize the serial connection toward the Camera
-  SERIAL_PORT.begin(SERIAL_BAUDRATE);
+  mySerial.begin(9600);
   
   // set the debug mode to true (to display binary exchanges with the Camera on Serial)
+  cam.setDebugStream(&mySerial);
   cam.setDebug(true);
   
-  // the following line initializes the library with camera ID 0xFF which calls for every camera
-  // you can comment this line, since the library is already usingID 0xFF when no ID is specified (see constructor)
-  cam.setID(0xFF);
+  // configures the id of the camera you're talking to
+  cam.setID(ZM_CAMERA_ID);  
   
-  Serial.println("\n\n*** HELLO CAM");
+  mySerial.println("\n\n*** HELLO CAM");
   cam.helloCam();    // say hello to the camera... that will answer with it's version string
-
-  Serial.print("\n\n*** CHANGE ID TO");
-  Serial.println(NEW_ZMCAMERA_ID);
-  if (cam.changeID(NEW_ZMCAMERA_ID))
-    Serial.println("OK");
-  else
-    Serial.println("NOT OK");
-
-  Serial.println("\n\n*** HELLO AGAIN (just checking)");
-  cam.helloCam();    // say hello AGAIN to the camera to verify the baudrate has been adjusted
 }
 
 // *****************

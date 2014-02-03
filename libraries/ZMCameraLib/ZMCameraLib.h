@@ -47,6 +47,7 @@ class ZMCamera {
   uint16_t bufferLen;
   boolean _debug;
   Stream * camStream;
+  Stream * debugStream;
   uint32_t _snapshotsize;
   uint16_t _snapshotpackagecount;
   uint16_t _snapshotpackagesize;
@@ -57,9 +58,10 @@ class ZMCamera {
 
   public:
     // CONSTRUCTION AND CONFIG
-    ZMCamera(Stream * str);          // constructor of the class, uses Stream to communicate with the Camera (Serial1 / SoftwareSerial)
-    void setDebug(boolean debug);    // set the lib on verbose mode (will output many lines on Serial)
-    boolean setID(byte id);          // sets the ID of the camera to be queried
+    ZMCamera(Stream * camstr);          // constructor of the class, uses Stream to communicate with the Camera (Serial1 / SoftwareSerial)
+    void setDebug(boolean debug);       // set the lib on verbose mode (will output many lines on Serial)
+    void setDebugStream(Stream * debugstr); // sets the stream used for debug output (Serial by default)
+    boolean setID(byte id);             // sets the ID of the camera to be queried
 
     // FUNCTIONS
     uint16_t helloCam();                                             // says hello and send me your version string

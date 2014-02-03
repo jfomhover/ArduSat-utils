@@ -27,12 +27,16 @@ char ZMCAMERALIB_fillerSequence[] = "ZZZZZZZZZZZZZZZZMMMMMMMMMMMMMMMM";
 byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
 //byte ZMCAMERALIB_ChangeIDSequence[7] = {'Z', 'M', 0x09, 0x00, 0x00, 'Z', '#'};
 
-    ZMCamera::ZMCamera(Stream * str) {
-      this->camStream = str;
+    ZMCamera::ZMCamera(Stream * camstr) {
+      this->camStream = camstr;
+      this->debugStream = &Serial; // by default
       _id = 0xFF;
       bufferLen = 0;
       _debug = false;
       _error = ZM_RETURN_OK;
+    };
+    void ZMCamera::setDebugStream(Stream * debugstr) {
+    	this->debugStream = debugstr;
     };
     void ZMCamera::setDebug(boolean debug) {
       this->_debug = debug;
@@ -169,10 +173,10 @@ byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
       
       struct _Usyntax_receivepackageheader * header = (struct _Usyntax_receivepackageheader *)camBuffer;
       if (_debug) {
-        Serial.print("package_id=");
-        Serial.print(header->packageid);
-        Serial.print(", package_size=");
-        Serial.println(header->packagesize);
+        debugStream->print("package_id=");
+        debugStream->print(header->packageid);
+        debugStream->print(", package_size=");
+        debugStream->println(header->packagesize);
       }
 
       // ERROR HANDLING
@@ -193,13 +197,13 @@ byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
     uint16_t ZMCamera::processAllPackagesToFile(Stream * output) {
       uint16_t t_total = 0;
       for (uint16_t t_packid=1; t_packid <= _snapshotpackagecount; t_packid++) {
-        Serial.print("get package ");
-        Serial.print(t_packid);
+        debugStream->print("get package ");
+        debugStream->print(t_packid);
         uint16_t t_err = getPackage(t_packid);
         if (t_err == 0)
           return(0);
-        Serial.print(" ");
-        Serial.println(getPackageLength());
+        debugStream->print(" ");
+        debugStream->println(getPackageLength());
         output->write(getPackagePTR(), getPackageLength());
         output->flush();
         t_total += getPackageLength();
@@ -242,8 +246,8 @@ byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
       }
       
       if (_debug) {      
-        if (t_ret) Serial.println("ACK");
-        else       Serial.println("NACK");
+        if (t_ret) debugStream->println("ACK");
+        else       debugStream->println("NACK");
       }
         
       return(t_ret);
@@ -251,7 +255,7 @@ byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
 
     void ZMCamera::sendMessage(byte * msg, int len) {
       if (_debug)
-        specialPrintBuffer("SEND", msg, len);
+        specialPrintBuffer("SEND", msg, len, debugStream);
       for (int i=0; i<len; i++)
         camStream->write(msg[i]);
     };
@@ -291,7 +295,7 @@ byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
     };
 
     void ZMCamera::displayBuffer() {
-      specialPrintBuffer("CAM", camBuffer, bufferLen);
+      specialPrintBuffer("CAM", camBuffer, bufferLen, debugStream);
     };
 
     int ZMCamera::getErrorCode() { return(_error); };

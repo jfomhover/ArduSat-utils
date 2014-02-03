@@ -30,7 +30,6 @@
     #define CS_PIN  4
     #define SS_PIN  10
 
-    #include <SoftwareSerial.h>
     SoftwareSerial mySerial(SERIAL_SOFT_RX, SERIAL_SOFT_TX); // RX, TX
 #endif
 

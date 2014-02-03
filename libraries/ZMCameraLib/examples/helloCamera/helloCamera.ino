@@ -22,11 +22,13 @@ limitations under the License.
 #include <Arduino.h>
 #include <ZMCameraLib.h>
 
+
 // *********************
 // *** CONFIGURATION ***
 // *********************
 
 // *** SERIAL / CAMERA ***
+#include <SoftwareSerial.h>
 
 #include "config.h"      // includes the file "config.h" that contains all parameters
                          // SERIAL_PORT, CS_PIN, SS_PIN, SERIAL_BAUDRATE...
