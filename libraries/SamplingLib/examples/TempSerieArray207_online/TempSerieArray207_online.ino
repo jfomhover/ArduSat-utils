@@ -24,15 +24,30 @@ limitations under the License.
 ********************************************************************
 */
 
+// CONFIG : uncomment one of the two lines below
+#define USE_ONLINESUMSAMPLING
+//#define USE_ONLINEINTERVALSAMPLING
+
 
 #include <Arduino.h>
 #include <SampleLib.h>
+#ifdef USE_ONLINESUMSAMPLING
 #include "OnlineSumSampling.h"
+#endif
+#ifdef USE_ONLINEINTERVALSAMPLING
+#include "OnlineIntervalSampling.h"
+#endif
 
 #include "dataSample.h"  // see the file
 
 
+#ifdef USE_ONLINESUMSAMPLING
 OnlineSumSampling osm;
+#endif
+#ifdef USE_ONLINEINTERVALSAMPLING
+OnlineIntervalSampling osm;
+#endif
+
 
 // the setup routine runs once when you press reset:
 void setup() {                
@@ -50,6 +65,12 @@ void setup() {
       Serial.print('\n');
     }
   }
+  // last point pushed
+  osm.markStep();
+  Serial.print(osm.popKey());
+  Serial.print('\t');
+  Serial.print(osm.popValue());
+  Serial.print('\n');
 }
 
 // the loop routine runs over and over again forever:
