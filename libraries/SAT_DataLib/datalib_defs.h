@@ -30,9 +30,9 @@ limitations under the License.
 // ********************
 
 #define PACKET_HEADER_CHUNK  		'#'
-//#define PACKET_HEADER_SERIE  		'!'
+#define PACKET_HEADER_SERIE  		'!'
 #define PACKET_HEADER_USERPACKET	'U'
-#define PACKET_HEADER_LOGPACKET  	'S'
+#define PACKET_HEADER_LOGPACKET  	'L'
 
 
 // ********************
@@ -43,6 +43,7 @@ limitations under the License.
 #define PACKET_SIZE_CHUNKSIZEMAX	55
 #define PACKET_SIZE_USERHEADER		2
 #define PACKET_SIZE_LOGHEADER		2
+#define PACKET_SIZE_SERIEHEADER		5
 //#define PACKET_SIZE_MAX				55
 
 
@@ -68,40 +69,46 @@ struct packet_log_header {
   uint8_t len;	// total length of the packet
 };
 
+// SERIE PACKET
+struct packet_serie_header {
+  char header;  // '!'
+  uint8_t keyType:4;	// unit type of the key
+  uint8_t keyDim:4;		// dimensionality of the key
+  uint8_t valType:4;	// unit type of the value
+  uint8_t valDim:4;		// dimensionality of the value
+  uint16_t length;	// length of the serie array
+};
 
 // **************************
 // *** USER DEFINED TYPES ***
 // **************************
 
-#define DATATYPE_UNIT_HEX4		0x00
-#define DATATYPE_UNIT_HEX3		0x01
-#define DATATYPE_UNIT_HEX2		2
-#define DATATYPE_UNIT_HEX1		3
+// schema for these constants is 			0000XXLL XX for type, LL for len-1
+#define DATATYPE_UNIT_HEX1		0x00	//	00000000
+#define DATATYPE_UNIT_HEX2		0x01	//	00000001
+#define DATATYPE_UNIT_HEX3		0x02	//	00000010
+#define DATATYPE_UNIT_HEX4		0x03	//	00000011
 
-#define DATATYPE_UNIT_INT4		4
-#define DATATYPE_UNIT_LONGINT	4
+#define DATATYPE_UNIT_INT1		0x04	//	00000100
+#define DATATYPE_UNIT_INT2		0x05	//	00000101
+#define DATATYPE_UNIT_INT3		0x06	//	00000110
+#define DATATYPE_UNIT_INT4		0x07	//	00000111
 
-#define DATATYPE_UNIT_INT3		5
+#define DATATYPE_UNIT_UINT1		0x08	//	00001000
+#define DATATYPE_UNIT_UINT2		0x09	//	00001001
+#define DATATYPE_UNIT_UINT3		0x0A	//	00001010
+#define DATATYPE_UNIT_UINT4		0x0B	//	00001011
 
-#define DATATYPE_UNIT_INT2		6
-#define DATATYPE_UNIT_SHORTINT	6
-#define DATATYPE_UNIT_INTEGER	6
+#define DATATYPE_UNIT_STR		0x0D	//	00001101 EXCEPTION TO THE SCHEMA
+#define DATATYPE_UNIT_FLOAT		0x0F	//  00001111
 
-#define DATATYPE_UNIT_INT1		7
-
-#define DATATYPE_UNIT_UINT4		8
-#define DATATYPE_UNIT_ULONGINT	8
-
-#define DATATYPE_UNIT_UINT3		9
-
-#define DATATYPE_UNIT_UINT2		10
-#define DATATYPE_UNIT_USHORTINT	10
-
-#define DATATYPE_UNIT_UINT1		11
-#define DATATYPE_UNIT_BYTE		11
-
-#define DATATYPE_UNIT_FLOAT		12
-#define DATATYPE_UNIT_STR		13
+// utility constants
+#define DATATYPE_UNIT_LONGINT	0x07	// (INT4)
+#define DATATYPE_UNIT_SHORTINT	0x05	// (INT2)
+#define DATATYPE_UNIT_INTEGER	0x05	// (SHORTINT) (INT2)
+#define DATATYPE_UNIT_ULONGINT	0x0B	// (UINT4)
+#define DATATYPE_UNIT_USHORTINT	0x09	// (UINT2)
+#define DATATYPE_UNIT_BYTE		0x00	// (HEX1)
 
 
 // ***************************
