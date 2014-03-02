@@ -19,7 +19,7 @@ limitations under the License.
 
     Description :  sketch that demonstrates how to use the user defined packets from SAT_DataLib
                    https://github.com/jfomhover/ArduSat-utils
-    Last Changed : Feb. 1, 2014
+    Last Changed : Mar. 3, 2014
 
 ********************************************************************
 */
@@ -90,7 +90,7 @@ void pullValues() {
   data.type3 = DATATYPE_UNIT_LONGINT;
   data.lval = 48151623;
 
-  data.type4 = DATATYPE_UNIT_HEX4;
+  data.type4 = DATATYPE_UNIT_HEX32;
   data.hex4val[0] = 0xAB;
   data.hex4val[1] = 0xCD;
   data.hex4val[2] = 0xEF;
@@ -137,7 +137,7 @@ void loop() {
 
   dumphex((byte*)&data, PACKET_SIZE);		// displays the binary content of the data structure, for pedagogical purpose here ^^
 
-  // should output : 55 19 0C 56 0E 49 40 06 2A 00 04 47 BC DE 02 00 AB CD EF 01 0D 53 54 4F 50
+  // should output : 55 19 0F 56 0E 49 40 05 2A 00 07 47 BC DE 02 03 AB CD EF 01 0D 53 54 4F 50 
 
   delay(5000);
 }

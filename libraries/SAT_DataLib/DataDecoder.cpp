@@ -101,6 +101,72 @@ boolean DataDecoder::parseLogPacket(byte * buffer) {
 	Serial.print('\n');
 };
 
+int DataDecoder::computeSerieLength(byte * buffer) {
+	int entryLen = computeSerieEntryLength(buffer[1])+computeSerieEntryLength(buffer[2]);
+
+	struct packet_serie_header * t_ptr = (struct packet_serie_header*)buffer;
+	return((entryLen * t_ptr->length)+sizeof(struct packet_serie_header));
+}
+
+int DataDecoder::computeSerieEntryLength(byte def) {
+	int entryLen = 0;
+
+	int keyLen = 0;
+	if ((def & 0x0F) == DATATYPE_UNIT_STR)
+		keyLen = 4;
+	else
+		keyLen = (def & 0x03) + 1; // 00000011
+
+	int keyDim = (def & 0xF0) >> 4;
+
+	entryLen = keyLen * keyDim;
+/*
+	Serial.print("entryLen=");
+	Serial.println(entryLen);
+*/
+	return(entryLen);
+}
+
+boolean DataDecoder::parseSeriePacket(byte * buffer, int bufferlen, Stream &dataFile) {
+	struct packet_serie_header * t_ptr = (struct packet_serie_header*)buffer;
+
+/*
+	Serial.print("parseSeriePacket ");
+	for (int i=0; i<5; i++) {
+		Serial.print(buffer[i],HEX);
+		Serial.write(' ');
+	}
+	Serial.println(bufferlen);
+*/
+
+	int keyLen = computeSerieEntryLength(buffer[1]);
+	int valLen = computeSerieEntryLength(buffer[2]);
+	int entryLen = keyLen + valLen;
+	byte * t_buffer = buffer + sizeof(struct packet_serie_header);
+	int t_bufferlen = bufferlen - sizeof(struct packet_serie_header);
+
+	for (int i=0; i<t_ptr->length; i++) {
+		for (int j=0; j<entryLen; j++)
+			t_buffer[j] = dataFile.read();
+		onSerieEntry(buffer[1], t_buffer);
+		onSerieEntry(buffer[2], t_buffer+keyLen);
+		Serial.write('\n');
+	}
+}
+
+void DataDecoder::onSerieEntry(byte def, byte * block) {
+	int keyType = def & 0x0F;
+	int keyDim = (def & 0xF0) >> 4;
+	int keyUnitLen = (def & 0x03)+1;
+
+	for (int i=0; i<keyDim; i++) {
+		if (keyType == DATATYPE_UNIT_STR)
+			onString((char*)(block+i*4), 4);
+		else
+			onUserDefined(keyType, block+i*keyUnitLen);
+	}
+}
+
 boolean DataDecoder::parseBuffer(byte * buffer) {
 	switch(buffer[0]) {
 	case PACKET_HEADER_CHUNK:
@@ -112,6 +178,9 @@ boolean DataDecoder::parseBuffer(byte * buffer) {
 	case PACKET_HEADER_LOGPACKET:
 		parseLogPacket(buffer);
 		break;
+/*	case PACKET_HEADER_SERIE:
+		parseSeriePacket(buffer, 4096);
+		break;*/
 	default:
 		Serial.println("!!! HEADER MISMATCH");
 		return(false);
@@ -165,6 +234,12 @@ boolean DataDecoder::parseFile(Stream &dataFile, byte * buffer, int bufferlen) {
             return(false);
           }
         parseLogPacket(buffer);
+    } else if (buffer[0] == PACKET_HEADER_SERIE) {
+    	buffer[1] = dataFile.read();
+    	buffer[2] = dataFile.read();
+    	buffer[3] = dataFile.read();
+    	buffer[4] = dataFile.read();
+    	parseSeriePacket(buffer, bufferlen, dataFile);
     } else {
       Serial.println("!!! HEADER MISMATCH");
       continue;
@@ -276,9 +351,48 @@ void DataDecoder::onUnknown(uint16_t type, byte * ptr) { Serial.print("unknown")
 
 void DataDecoder::onString(char * buffer, int len) {
 	for(int i=0; i<len; i++)
-		Serial.print(buffer[i]);
+		Serial.write(buffer[i]);
 	Serial.print(_separation);
 };
+
+void DataDecoder::onUserDefined(byte def, byte * block) {
+	int type = def & 0x0F;
+	unsigned long int ui = 0;
+	signed long int si = 0;
+//	float f;
+
+	if (type == DATATYPE_UNIT_STR) {
+		for (int i=0; i<4; i++)
+			Serial.write((char)block[i]);
+		return;
+	}
+
+	if (type == DATATYPE_UNIT_FLOAT) {
+		Serial.print(*((float*)block));
+	}
+
+	int len = (def & 0x03)+1; 	// 00000011
+	type = def & 0x0C;	// 00001100
+
+	switch(type) {
+	case DATATYPE_UNITTYPE_HEX:
+		memcpy((void*)&ui, (void*)block, len);
+		Serial.print(ui,HEX);
+		break;
+	case DATATYPE_UNITTYPE_INT:
+		memcpy((void*)&si, (void*)block, len);
+		Serial.print(si);
+		break;
+	case DATATYPE_UNITTYPE_UINT:
+		memcpy((void*)&ui, (void*)block, len);
+		Serial.print(ui);
+		break;
+	default:
+		Serial.print("NaN");
+		break;
+	}
+	Serial.print(_separation);
+}
 
 /* dealing with userdefined block depending on specified type */
 int DataDecoder::onUserDefined(byte userblock[]) {
@@ -292,19 +406,19 @@ int DataDecoder::onUserDefined(byte userblock[]) {
     	}
     	t_len = 5;
     	break;
-	case DATATYPE_UNIT_UINT4:
+	case DATATYPE_UNIT_UINT32:
 		Serial.print(*(uint32_t *)(userblock+1));
 		t_len = 1 + sizeof(uint32_t);
 		break;
-	case DATATYPE_UNIT_UINT2:
+	case DATATYPE_UNIT_UINT16:
 		Serial.print(*(uint16_t *)(userblock+1));
 		t_len = 1 + sizeof(uint16_t);
 		break;
-	case DATATYPE_UNIT_INT4:
+	case DATATYPE_UNIT_INT32:
 		Serial.print(*(int32_t *)(userblock+1));
 		t_len = 1 + sizeof(int32_t);
 		break;
-	case DATATYPE_UNIT_INT2:
+	case DATATYPE_UNIT_INT16:
 		Serial.print(*(int16_t *)(userblock+1));
 		t_len = 1 + sizeof(int16_t);
 		break;
@@ -312,7 +426,7 @@ int DataDecoder::onUserDefined(byte userblock[]) {
 		Serial.print(*(float *)(userblock+1));
 		t_len = 1 + sizeof(float);
 		break;
-	case DATATYPE_UNIT_HEX4:
+	case DATATYPE_UNIT_HEX32:
 	default:
     	for(int i=1; i<5; i++) {
     		byte b = userblock[i];

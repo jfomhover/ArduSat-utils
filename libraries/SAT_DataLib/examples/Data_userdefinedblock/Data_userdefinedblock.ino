@@ -19,7 +19,7 @@ limitations under the License.
 
     Description :  sketch that demonstrates how to use chunk packets with the "USERDEFINED" blocks
                    https://github.com/jfomhover/ArduSat-utils
-    Last Changed : Feb. 1, 2014
+    Last Changed : Mar. 3, 2014
 
 ********************************************************************
 */
@@ -74,7 +74,7 @@ void pullValues() {
 
   // you can fill the remaining 4 bytes one by one like below
   // OPTION HEX
-  data.userdefinedblock[0] = DATATYPE_UNIT_HEX4; // using this as first byte will display the other 4 bytes in binary format on the decoder
+  data.userdefinedblock[0] = DATATYPE_UNIT_HEX32; // using this as first byte will display the other 4 bytes in binary format on the decoder
   data.userdefinedblock[1] = 0x04;
   data.userdefinedblock[2] = 0x08;
   data.userdefinedblock[3] = 0x15;
@@ -88,7 +88,7 @@ void pullValues() {
   data.userdefinedblock2[4] = 'P';
 
   // or you can fill with a value taken from somewhere...
-//  data.userdefinedblock[0] = DATATYPE_UNIT_UINT4; // using this as first byte will display the other 4 bytes as an unsigned long int
+//  data.userdefinedblock[0] = DATATYPE_UNIT_UINT32; // using this as first byte will display the other 4 bytes as an unsigned long int
 //  unsigned long int whatever = 481516;
 //  memcpy((void*)(data.userdefinedblock), (void*)&whatever, sizeof(whatever));  // copy the bytes of the unsigned long int to the block
 
@@ -131,7 +131,7 @@ void loop() {
 
   dumphex((byte*)&data, PACKET_SIZE);		// displays the binary content of the data structure, for pedagogical purpose here ^^
 
-  // should output : 53 13 6C 6F 67 20 61 6E 79 74 68 69 6E 67 20 68 65 72 65
+  // should output : 23 01 60 00 00 00 00 03 04 08 15 16 0D 53 54 4F 50 
 
   delay(5000);
 }

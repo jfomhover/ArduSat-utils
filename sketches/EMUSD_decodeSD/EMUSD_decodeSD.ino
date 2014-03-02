@@ -31,8 +31,10 @@ see library at https://github.com/jfomhover/ArduSat-utils/tree/master/libraries/
 
 // NOTE : configuration of SD card / file
 #define CS_PIN      4    // 4 for Arduino Ethernet
+#define BUFFER_LENGTH  64
 
-byte buffer[128];   // buffer for parsing the file (maximum size of chunks)
+byte * buffer;   // buffer for parsing the file (maximum size of chunks)
+int bufferLen = 0;
 
 // use the syntax beloc to declare the datatypes you'll need
 DataDecoder decoder;
@@ -54,6 +56,20 @@ void setup() {
     return;
   }
   Serial.println("card initialized.");
+  
+  buffer = NULL;
+  bufferLen = BUFFER_LENGTH;
+  while(buffer == NULL) {
+    buffer = (byte*)malloc(bufferLen);
+    if (buffer == NULL)
+      bufferLen = bufferLen / 2;
+    if (bufferLen < 16) {
+      Serial.println("not enough memory");
+      while(1);
+    }
+  };
+  Serial.print("allocated ");
+  Serial.println(bufferLen);
 }
 
 
@@ -77,7 +93,7 @@ void loop() {
   // if the file is available, write to it:
   if (dataFile) {
     decoder.setSeparation('\t');
-    decoder.parseFile(dataFile, buffer, 128);
+    decoder.parseFile(dataFile, buffer, bufferLen);
     dataFile.close();
   }
   // if the file isn't open, pop up an error:

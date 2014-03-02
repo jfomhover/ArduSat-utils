@@ -44,6 +44,9 @@ class DataDecoder {
     boolean parseChunkPacket(byte * buffer);
     boolean parseUserPacket(byte * buffer);
     boolean parseLogPacket(byte * buffer);
+    boolean parseSeriePacket(byte * buffer, int bufferlen, Stream &dataFile);
+    int computeSerieLength(byte * buffer);
+    int computeSerieEntryLength(byte);
     boolean parseBuffer(byte * buffer);
     boolean parseFile(Stream &dataFile, byte * buffer, int bufferlen);
     virtual void onDataChange(uint16_t newtypes);
@@ -60,6 +63,8 @@ class DataDecoder {
     virtual void onACCEL(int16_t x, int16_t y, int16_t z);
     virtual void onGYRO(int16_t x, int16_t y, int16_t z);
     virtual int onUserDefined(byte userblock[]);
+    virtual void onUserDefined(byte def, byte * block);
+    virtual void onSerieEntry(byte def, byte * block);
     virtual void onUnknown(uint16_t type, byte * ptr);
     virtual void onString(char * buffer, int len);
 };

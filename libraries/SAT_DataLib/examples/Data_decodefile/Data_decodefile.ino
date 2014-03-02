@@ -30,7 +30,7 @@ limitations under the License.
 #include <SAT_DataLib.h>
 
 const int chipSelect = 4;              // pin used as ChipSelect (see SD library)
-char filename[] = "fullpack.bin";      // name of the file on SD
+char filename[] = "datachk.bin";       // name of the file on SD
 byte buffer[64];                       // a buffer for the decoder to run, I recommend at least 64 bytes of data
 
 
