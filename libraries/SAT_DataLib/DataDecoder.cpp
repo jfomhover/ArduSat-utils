@@ -358,7 +358,7 @@ void DataDecoder::onString(char * buffer, int len) {
 void DataDecoder::onUserDefined(byte def, byte * block) {
 	int type = def & 0x0F;
 	unsigned long int ui = 0;
-	signed long int si = 0;
+	signed long int sli = 0;
 //	float f;
 
 	if (type == DATATYPE_UNIT_STR) {
@@ -376,14 +376,23 @@ void DataDecoder::onUserDefined(byte def, byte * block) {
 
 	switch(type) {
 	case DATATYPE_UNITTYPE_HEX:
-		memcpy((void*)&ui, (void*)block, len);
-		Serial.print(ui,HEX);
+//		memcpy((void*)&ui, (void*)block, len);
+		for (int i=0; i<len; i++) {
+			if (block[i] < 0x10)
+				Serial.print('0');
+			Serial.print(block[i],HEX);
+		}
 		break;
 	case DATATYPE_UNITTYPE_INT:
-		memcpy((void*)&si, (void*)block, len);
-		Serial.print(si);
+		memcpy((void*)&sli, (void*)block, len);
+		if (block[len-1] & 0x80) {
+			for (int i=len; i<4; i++)
+				((byte*)&sli)[i] = 0xFF;
+		}
+		Serial.print(sli);
 		break;
 	case DATATYPE_UNITTYPE_UINT:
+		ui = 0;
 		memcpy((void*)&ui, (void*)block, len);
 		Serial.print(ui);
 		break;
@@ -396,47 +405,13 @@ void DataDecoder::onUserDefined(byte def, byte * block) {
 
 /* dealing with userdefined block depending on specified type */
 int DataDecoder::onUserDefined(byte userblock[]) {
-	// TODO : switch different types
-	int t_len = 0;
-	switch(userblock[0]) {
-	case DATATYPE_UNIT_STR:
-    	for(int i=1; i<5; i++) {
-    		char c = (char)userblock[i];
-   			Serial.print(c);
-    	}
-    	t_len = 5;
-    	break;
-	case DATATYPE_UNIT_UINT32:
-		Serial.print(*(uint32_t *)(userblock+1));
-		t_len = 1 + sizeof(uint32_t);
-		break;
-	case DATATYPE_UNIT_UINT16:
-		Serial.print(*(uint16_t *)(userblock+1));
-		t_len = 1 + sizeof(uint16_t);
-		break;
-	case DATATYPE_UNIT_INT32:
-		Serial.print(*(int32_t *)(userblock+1));
-		t_len = 1 + sizeof(int32_t);
-		break;
-	case DATATYPE_UNIT_INT16:
-		Serial.print(*(int16_t *)(userblock+1));
-		t_len = 1 + sizeof(int16_t);
-		break;
-	case DATATYPE_UNIT_FLOAT:
-		Serial.print(*(float *)(userblock+1));
-		t_len = 1 + sizeof(float);
-		break;
-	case DATATYPE_UNIT_HEX32:
-	default:
-    	for(int i=1; i<5; i++) {
-    		byte b = userblock[i];
-    		if (b < 0x10)
-    			Serial.print('0');
-    		Serial.print(b,HEX);
-    	}
-    	t_len = 5;
-	}
-	Serial.print(_separation);
-	return(t_len);
+	onUserDefined(userblock[0], userblock+1);
+
+	if (userblock[0] == DATATYPE_UNIT_STR)
+		return(5);
+	if (userblock[0] == DATATYPE_UNIT_FLOAT)
+		return(5);
+	int len = (userblock[0] & 0x03)+1; 	// 00000011
+	return(len);
 }
 

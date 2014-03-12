@@ -92,7 +92,7 @@ void loop() {
   }    
   // if the file is available, write to it:
   if (dataFile) {
-    decoder.setSeparation('\t');
+    decoder.setSeparation(';');
     decoder.parseFile(dataFile, buffer, bufferLen);
     dataFile.close();
   }

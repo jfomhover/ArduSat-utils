@@ -33,6 +33,8 @@ boolean isFileChar(char c) {
     return(true);
   if ((c >= 'A') && (c <= 'Z'))
     return(true);
+  if ((c >= '0') && (c <= '9'))
+    return(true);
   return(false);
 };
 
