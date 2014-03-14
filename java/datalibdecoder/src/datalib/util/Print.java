@@ -59,19 +59,20 @@ public class Print {
 		byte t_array[] = new byte[8];
 		for (int i=0; i<expectedLen; i++)
 			t_array[i] = value[i+offset];
-		if ((offset+expectedLen) < value.length) {
-			if ((t_array[expectedLen-1] & 0x80) == 0) {
-				// negative int
-				for (int i=expectedLen; i<t_array.length; i++)
-					t_array[i] = (byte) 0x00;
-			} else {
-				// positive int
-				for (int i=expectedLen; i<t_array.length; i++)
-					t_array[i] = (byte) 0xFF;
-			}
+		if ((t_array[expectedLen-1] & 0x80) == 0) {
+			// positive int
+//			System.out.println("positive int");
+			for (int i=expectedLen; i<t_array.length; i++)
+				t_array[i] = (byte) 0x00;
+		} else {
+			// negative int
+//			System.out.println("negative int");
+			for (int i=expectedLen; i<t_array.length; i++)
+				t_array[i] = (byte) 0xFF;
 		}
 
 		Logger.getGlobal().log(Level.FINEST, "*** printing INT("+value.length+","+offset+","+expectedLen+") "+printArrayAsHEX(value)+"=> "+printArrayAsHEX(t_array,0, 4));
+//		System.out.println("*** printing INT("+value.length+","+offset+","+expectedLen+") "+printArrayAsHEX(value)+"=> "+printArrayAsHEX(t_array,0, 4));
 		
 		ByteBuffer bb = ByteBuffer.wrap(t_array);
 		bb.order(ByteOrder.LITTLE_ENDIAN);

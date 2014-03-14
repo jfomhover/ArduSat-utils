@@ -1,5 +1,8 @@
 package datalib.syntax;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import datalib.util.Print;
 
 public class GenericUnit {

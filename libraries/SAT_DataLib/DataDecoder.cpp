@@ -369,6 +369,7 @@ void DataDecoder::onUserDefined(byte def, byte * block) {
 
 	if (type == DATATYPE_UNIT_FLOAT) {
 		Serial.print(*((float*)block));
+		return;
 	}
 
 	int len = (def & 0x03)+1; 	// 00000011
