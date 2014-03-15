@@ -22,7 +22,7 @@ struct _solving_name resolvarray[] = {
   { 0x1D, "ADXL345 !! on HIGH address (try grounding ADDR pin)" },
   { 0x69, "ITG3200" },
   { 0x68, "ITG3200 !! LOW address instead of HIGH (try to connect AD0 to HIGH)" },
-  { 0x51, "IR thermometer" },
+  { 0x5A, "IR thermometer" },
   { 0x23, "Geiger" },
   { 0x22, "Spertruino" },
   { 0xFF, NULL}      // keep this line for the resolv() function to stop !
