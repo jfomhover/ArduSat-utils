@@ -46,6 +46,7 @@ byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
     };      // sets the ID of the camera to be queried
     
     uint16_t ZMCamera::helloCam() {
+      bufferReset();
       sendMessage((byte*)ZMCAMERALIB_fillerSequence,32);
       sendMessage(ZMCAMERALIB_AskVersionSequence, 5);
       uint16_t t_ret = receiveData(100);
@@ -53,6 +54,7 @@ byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
     };
     
     boolean ZMCamera::changeBaud(byte baud) {
+      bufferReset();
       byte U_changeBaud[] = { 'U', 'I', _id, baud, '#' }; // TODO : no idea where the ID is
       sendMessage(U_changeBaud, 6);
 
@@ -60,12 +62,12 @@ byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
 
       byte OK_changebaud[] = { 'U', 'I', _id, '#' }; // change from 1 to 2
       boolean t_retcheck = bufferFitAnswer(OK_changebaud, 4);
-      bufferReset();
 
       return(t_retcheck);
     };
 
     boolean ZMCamera::changeID(byte new_id) {
+      bufferReset();
       byte U_changeID[] = { 'U', 'D', _id, new_id, '#' }; // change from 1 to 2      
       sendMessage(U_changeID, 6);
       
@@ -73,7 +75,6 @@ byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
 
       byte OK_changeID[] = { 'U', 'D', new_id, '#' }; // change from 1 to 2
       boolean t_retcheck = bufferFitAnswer(OK_changeID, 4);
-      bufferReset();
       if (t_retcheck)
         _id = new_id;
 
@@ -81,6 +82,7 @@ byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
     };
 
     boolean ZMCamera::changeCompressionRatio(byte ratio) {
+      bufferReset();
       byte U_changeratio[] = { 'U', 'Q', _id, ratio, '#' }; // change from 1 to 2      
       sendMessage(U_changeratio, 6);
       
@@ -88,7 +90,6 @@ byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
 
       byte OK_changeratio[] = { 'U', 'Q', _id, '#' }; // change from 1 to 2
       boolean t_retcheck = bufferFitAnswer(OK_changeratio, 4);
-      bufferReset();
 
       return(t_retcheck);
     };
@@ -261,6 +262,7 @@ byte ZMCAMERALIB_AskVersionSequence[5] = { 'Z', 'M', 0x03, 'Z', '#' };
     };
   
     void ZMCamera::bufferReset() {
+    	memset(camBuffer, 0x00, ZM_BUFFER_SIZE);
       bufferLen = 0;
     };
   

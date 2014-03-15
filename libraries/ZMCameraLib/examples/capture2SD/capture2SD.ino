@@ -34,9 +34,9 @@ limitations under the License.
 #include "config.h"      // includes the file "config.h" that contains all parameters
                          // SERIAL_PORT, CS_PIN, SS_PIN, SERIAL_BAUDRATE...
 
-#define ZM_CAMERA_ID  0x01  // the ID of your camera, if unknown try 0xFF
+#define ZM_CAMERA_ID  0x00  // the ID of your camera, if unknown try 0xFF or 0x00
 
-#define SD_JPEG_FILENAME  "testCL3.jpg"
+#define SD_JPEG_FILENAME  "testc429.jpg"
 
 
 // ***************
@@ -90,6 +90,7 @@ void setup() {
   // ASK FOR A CAPTURE, AND STORE THE RESULT VIA THE SD
   SERIAL_PORT.begin(SERIAL_BAUDRATE);
   cam.setDebug(true);
+  cam.setID(ZM_CAMERA_ID);
   
   // just checking if the cam is answering
   // she will provide a string indicating its version
@@ -110,7 +111,7 @@ void setup() {
   // all results will be stored on the camera, and you'll have to query for "packages"
   // (smaller bits of data that you have to aggregate afterwards to reconstitute the JPEG file
   Serial.println("\n\n*** CAPTURE PICTURE");  
-  if (cam.captureImage(ZM_PICTURE_SIZE_640X480, 64))
+  if (cam.captureImage(ZM_PICTURE_SIZE_1280X1024, 64))
     Serial.println("OK");
   else
     Serial.println("NOT OK");
